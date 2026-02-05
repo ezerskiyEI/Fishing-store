@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Акции и скидки{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-5">🔥 Акции и скидки</h1>
+        <p class="lead text-muted">Специальные предложения этого месяца</p>
+    </div>
+</div>
+
+<div class="alert alert-warning mb-4">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+        <div>
+            <h5 class="mb-1">Акция действует до 28 февраля!</h5>
+            <p class="mb-0">Скидки до 50% на все товары из каталога</p>
+        </div>
+    </div>
+</div>
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    <!-- Акционный товар 1 -->
+    <div class="col">
+        <div class="card h-100 shadow-sm border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Скидка 30%</h5>
+            </div>
+            <div class="card-body">
+                <h4 class="card-title">Удочка Premium</h4>
+                <p class="card-text">Профессиональная удочка со скидкой 30%</p>
+                <div class="d-flex align-items-center mb-3">
+                    <h3 class="text-danger mb-0">3 500 ₽</h3>
+                    <small class="text-muted text-decoration-line-through ms-3">5 000 ₽</small>
+                </div>
+                <a href="{{ url_for('catalog') }}" class="btn btn-danger w-100">Купить со скидкой</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Акционный товар 2 -->
+    <div class="col">
+        <div class="card h-100 shadow-sm border-warning">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0">Скидка 25%</h5>
+            </div>
+            <div class="card-body">
+                <h4 class="card-title">Набор снастей</h4>
+                <p class="card-text">Полный набор для начинающего рыбака</p>
+                <div class="d-flex align-items-center mb-3">
+                    <h3 class="text-warning mb-0">7 500 ₽</h3>
+                    <small class="text-muted text-decoration-line-through ms-3">10 000 ₽</small>
+                </div>
+                <a href="{{ url_for('catalog') }}" class="btn btn-warning w-100">Выбрать набор</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Акционный товар 3 -->
+    <div class="col">
+        <div class="card h-100 shadow-sm border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Бесплатная доставка</h5>
+            </div>
+            <div class="card-body">
+                <h4 class="card-title">При заказе от 3000₽</h4>
+                <p class="card-text">Бесплатная курьерская доставка по Москве</p>
+                <div class="mb-3">
+                    <h3 class="text-success">0 ₽</h3>
+                    <small class="text-muted">обычно 300 ₽</small>
+                </div>
+                <a href="{{ url_for('delivery') }}" class="btn btn-success w-100">Узнать условия</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="text-center mt-5">
+    <div class="d-grid gap-3 d-md-flex justify-content-md-center">
+        <a href="{{ url_for('catalog') }}" class="btn btn-primary btn-lg">
+            <i class="fas fa-arrow-left me-2"></i>Вернуться в каталог
+        </a>
+        <a href="{{ url_for('delivery') }}" class="btn btn-outline-success btn-lg">
+            <i class="fas fa-truck me-2"></i>Условия доставки
+        </a>
+    </div>
+</div>
+{% endblock %}

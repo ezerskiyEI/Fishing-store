@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Главная - Fishing Shop{% endblock %}
+{% block body %}
+
+<div class="row g-4">
+
+    <div class="col-lg-4">
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-primary text-white fw-bold">
+                📅 Прогноз клева (Февраль)
+            </div>
+            <div class="card-body">
+                {% for item in calendar %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-bold">{{ item.fish }}</span>
+                        <small class="text-muted">{{ item.comment }}</small>
+                    </div>
+                    <div class="progress" style="height: 10px;">
+                        <div
+                            class="progress-bar bg-{{ item.color }}"
+                            role="progressbar"
+                
+                            aria-valuenow="{{ item.activity }}"
+                            aria-valuemin="0"
+                            aria-valuemax="100">
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white fw-bold">
+                📰 Новости
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for news_item in news %}
+                <li class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1 fw-bold">{{ news_item.title }}</h6>
+                        <small class="text-muted">{{ news_item.date }}</small>
+                    </div>
+                    <p class="mb-1 small text-muted">{{ news_item.desc }}</p>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+    </div>
+
+    <div class="col-lg-8">
+
+        <div class="p-5 mb-4 text-white rounded-3 shadow-sm"
+             style="background: linear-gradient(45deg, #0d6efd, #0dcaf0);">
+            <div class="container-fluid py-3">
+                <h1 class="display-5 fw-bold">Сезон открытой воды!</h1>
+                <p class="col-md-8 fs-4">
+                    Готовь снасти заранее. Скидки до 50% на летнюю коллекцию удилищ.
+                </p>
+                <a href="{{ url_for('catalog') }}"
+                   class="btn btn-light btn-lg fw-bold text-primary">
+                    Перейти в каталог
+                </a>
+            </div>
+        </div>
+
+        <div class="row align-items-md-stretch">
+            <div class="col-md-6">
+                <div class="h-100 p-4 text-bg-dark rounded-3 hover-card"
+                     style="background: #212529 url('https://via.placeholder.com/600x400/212529/555') center / cover;">
+                    <h2 class="position-relative z-1">Одежда для рыбалки</h2>
+                    <p class="position-relative z-1">
+                        Новое поступление костюмов Norfin.
+                    </p>
+                    <a href="{{ url_for('catalog') }}"
+                       class="btn btn-outline-light position-relative z-1">
+                        Смотреть
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="h-100 p-4 bg-light border rounded-3 hover-card">
+                    <h2 class="text-danger">Ликвидация зимы</h2>
+                    <p>
+                        Скидки на ледобуры и зимние палатки до конца недели.
+                    </p>
+                    <a href="{{ url_for('promotions') }}"
+                       class="btn btn-outline-danger">
+                        Все акции
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm p-3 mb-4">
+            <h6 class="fw-bold">Сортировка</h6>
+            <form method="GET" action="{{ url_for('catalog') }}">
+                <select name="sort" class="form-select form-select-sm mb-3" onchange="this.form.submit()">
+                    <option value="popular" {% if request.args.get('sort') == 'popular' %}selected{% endif %}>По популярности</option>
+                    <option value="price_asc" {% if request.args.get('sort') == 'price_asc' %}selected{% endif %}>Сначала дешевле</option>
+                    <option value="price_desc" {% if request.args.get('sort') == 'price_desc' %}selected{% endif %}>Сначала дороже</option>
+                </select>
+
+                <h6 class="fw-bold mt-3">Категории</h6>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('catalog') }}" class="list-group-item list-group-item-action small">Все товары</a>
+                    <a href="{{ url_for('catalog', cat='rods') }}" class="list-group-item list-group-item-action small">Удилища</a>
+                    <a href="{{ url_for('catalog', cat='reels') }}" class="list-group-item list-group-item-action small">Катушки</a>
+                    <a href="{{ url_for('catalog', cat='lures') }}" class="list-group-item list-group-item-action small">Приманки</a>
+                    <a href="{{ url_for('catalog', cat='accessories') }}" class="list-group-item list-group-item-action small">Аксессуары</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
+            {% for item in products %}
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm product-card">
+                    <div class="position-relative">
+                        <img src="https://via.placeholder.com/300x300/f8f9fa/666?text={{ item.brand }}" class="card-img-top p-2" alt="...">
+                        <span class="badge bg-danger position-absolute top-0 start-0 m-2">-{{ item.discount }}%</span>
+                    </div>
+                    <div class="card-body px-2">
+                        <h5 class="fw-bold mb-0">{{ item.price }} ₽ <span class="text-muted text-decoration-line-through small fw-light">{{ item.old_price }} ₽</span></h5>
+                        <p class="text-muted small mb-1">{{ item.brand }} / {{ item.name }}</p>
+                        <div class="text-warning small mb-3">★ {{ item.rating }} <span class="text-muted">({{ item.reviews }} оценок)</span></div>
+                        <button class="btn w-100 py-2 fw-bold" style="background-color: #cb11ab; color: white; border-radius: 10px;">Завтра</button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow border-0">
+            <div class="card-body p-4">
+                <h3 class="text-center fw-bold mb-4">Регистрация</h3>
+                
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Логин</label>
+                        <input type="text" name="username" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" placeholder="beztele153@gmail.com" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Пароль</label>
+                        <div class="input-group">
+                            <input type="password" name="password" id="passInput" class="form-control" required>
+                            <button class="btn btn-outline-secondary" type="button" id="toggleBtn">👁️</button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100 fw-bold">Получить код</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('toggleBtn').addEventListener('click', function() {
+        const input = document.getElementById('passInput');
+        if (input.type === 'password') {
+            input.type = 'text';
+            this.textContent = '🔒';
+        } else {
+            input.type = 'password';
+            this.textContent = '👁️';
+        }
+    });
+</script>
+{% endblock %}

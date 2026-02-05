@@ -1,0 +1,22 @@
+/* HEADER */
+header {
+    padding: 10px;
+    z-index: 1000;
+    background: #fff;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease-in-out;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+}
+
+/* Класс для скрытия шапки */
+header.hidden {
+    transform: translateY(-100%);
+}
+
+/* Добавляем отступ для контента, чтобы он не скрывался под fixed шапкой */
+body {
+    padding-top: 70px; /* Высота шапки + отступы */
+}
