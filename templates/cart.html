@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="container bg-white p-4 shadow-sm rounded">
+    <h2 class="fw-bold mb-4">🛒 Корзина</h2>
+    {% if items %}
+    <table class="table align-middle">
+        <thead>
+            <tr><th>Товар</th><th>Цена</th><th>Кол-во</th><th>Итого</th><th></th></tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.product.name }}</td>
+                <td>{{ item.product.price }} ₽</td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <a href="{{ url_for('update_cart', id=item.id, action='dec') }}" class="btn btn-outline-dark">-</a>
+                        <span class="btn btn-light disabled">{{ item.quantity }}</span>
+                        <a href="{{ url_for('update_cart', id=item.id, action='inc') }}" class="btn btn-outline-dark">+</a>
+                    </div>
+                </td>
+                <td>{{ item.product.price * item.quantity }} ₽</td>
+                <td><a href="{{ url_for('remove_from_cart', id=item.id) }}" class="text-danger">🗑️</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div class="row mt-4 border-top pt-4">
+        <div class="col-md-6">
+            <h5>🚚 Способ доставки:</h5>
+            <select class="form-select w-75 mt-2">
+                <option>Курьер (Завтра)</option>
+                <option>Пункт СДЭК</option>
+                <option>Самовывоз</option>
+            </select>
+        </div>
+        <div class="col-md-6 text-end">
+            <h3>Итого: <span class="text-danger">{{ total }} ₽</span></h3>
+            <button class="btn btn-warning btn-lg fw-bold px-5">Оформить</button>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-5"><h4>Пусто 🎣</h4><a href="{{ url_for('catalog') }}" class="btn btn-dark">В каталог</a></div>
+    {% endif %}
+</div>
+{% endblock %}

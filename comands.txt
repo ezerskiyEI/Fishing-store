@@ -1,0 +1,29 @@
+pip install flask-mail
+
+pip install psycopg2-binary
+
+
+pip install flask flask_sqlalchemy flask_login flask_mail itsdangerous psycopg2-binary werkzeug
+
+
+pip install Flask Flask-SQLAlchemy Flask-WTF psycopg2-binary passlib
+
+
+pip install flask_sqlalchemy
+
+
+Активация админ аккаунта( через powershell заходиим в папку проекта   venv\Scripts\activate       ->   pip install flask flask-sqlalchemy flask-login flask-mail psycopg2 werkzeug
+
+python  )
+
+и Вводим потом 
+from app import app, db, User
+with app.app_context():
+    # Замени на свой email
+    user = User.query.filter_by(email='beztele153@gmail.com').first()
+    if user:
+        user.is_admin = True
+        db.session.commit()
+        print(f"Пользователь {user.username} теперь админ!")
+    else:
+        print("Пользователь не найден!")

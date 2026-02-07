@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block body %}
+<h2>Оформление заказа</h2>
+
+<form method="POST">
+    <div class="form-check">
+        <input class="form-check-input" type="radio" name="delivery" value="Самовывоз" checked>
+        <label class="form-check-label">Самовывоз</label>
+    </div>
+
+    <div class="form-check">
+        <input class="form-check-input" type="radio" name="delivery" value="Почта России">
+        <label class="form-check-label">Почта России</label>
+    </div>
+
+    <button class="btn btn-success mt-3 w-100">Подтвердить заказ</button>
+</form>
+{% endblock %}

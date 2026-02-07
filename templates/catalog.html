@@ -1,47 +1,113 @@
 {% extends "base.html" %}
+
 {% block body %}
 <div class="row">
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm p-3 mb-4">
-            <h6 class="fw-bold">Сортировка</h6>
-            <form method="GET" action="{{ url_for('catalog') }}">
-                <select name="sort" class="form-select form-select-sm mb-3" onchange="this.form.submit()">
-                    <option value="popular" {% if request.args.get('sort') == 'popular' %}selected{% endif %}>По популярности</option>
-                    <option value="price_asc" {% if request.args.get('sort') == 'price_asc' %}selected{% endif %}>Сначала дешевле</option>
-                    <option value="price_desc" {% if request.args.get('sort') == 'price_desc' %}selected{% endif %}>Сначала дороже</option>
-                </select>
-
-                <h6 class="fw-bold mt-3">Категории</h6>
-                <div class="list-group list-group-flush">
-                    <a href="{{ url_for('catalog') }}" class="list-group-item list-group-item-action small">Все товары</a>
-                    <a href="{{ url_for('catalog', cat='rods') }}" class="list-group-item list-group-item-action small">Удилища</a>
-                    <a href="{{ url_for('catalog', cat='reels') }}" class="list-group-item list-group-item-action small">Катушки</a>
-                    <a href="{{ url_for('catalog', cat='lures') }}" class="list-group-item list-group-item-action small">Приманки</a>
-                    <a href="{{ url_for('catalog', cat='accessories') }}" class="list-group-item list-group-item-action small">Аксессуары</a>
+    <div class="col-md-3 mb-4">
+        <div class="card border-0 shadow-sm sticky-top" style="top: 90px;">
+            <div class="card-header bg-dark text-white fw-bold">
+                <i class="bi bi-filter-left me-2"></i>Категории
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{{ url_for('catalog') }}" class="list-group-item list-group-item-action {% if not request.args.get('category') %}active{% endif %}">
+                    Все товары
+                </a>
+                <a href="{{ url_for('catalog', category='Удилища') }}" class="list-group-item list-group-item-action {% if request.args.get('category') == 'Удилища' %}active{% endif %}">
+                    Удилища
+                </a>
+                <a href="{{ url_for('catalog', category='Катушки') }}" class="list-group-item list-group-item-action {% if request.args.get('category') == 'Катушки' %}active{% endif %}">
+                    Катушки
+                </a>
+                <a href="{{ url_for('catalog', category='Приманки') }}" class="list-group-item list-group-item-action {% if request.args.get('category') == 'Приманки' %}active{% endif %}">
+                    Приманки
+                </a>
+                <a href="{{ url_for('catalog', category='Аксессуары') }}" class="list-group-item list-group-item-action {% if request.args.get('category') == 'Аксессуары' %}active{% endif %}">
+                    Аксессуары
+                </a>
+            </div>
+            
+            <div class="card-body border-top">
+                <h6 class="fw-bold mb-3">Сортировка</h6>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('catalog', sort='price_asc', category=request.args.get('category'), search=request.args.get('search')) }}" class="btn btn-outline-secondary btn-sm">Сначала дешевые</a>
+                    <a href="{{ url_for('catalog', sort='price_desc', category=request.args.get('category'), search=request.args.get('search')) }}" class="btn btn-outline-secondary btn-sm">Сначала дорогие</a>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
     <div class="col-md-9">
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
-            {% for item in products %}
-            <div class="col">
-                <div class="card h-100 border-0 shadow-sm product-card">
-                    <div class="position-relative">
-                        <img src="https://via.placeholder.com/300x300/f8f9fa/666?text={{ item.brand }}" class="card-img-top p-2" alt="...">
-                        <span class="badge bg-danger position-absolute top-0 start-0 m-2">-{{ item.discount }}%</span>
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <form action="{{ url_for('catalog') }}" method="GET" class="d-flex gap-2">
+                    {% if request.args.get('category') %}
+                        <input type="hidden" name="category" value="{{ request.args.get('category') }}">
+                    {% endif %}
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Поиск по названию или описанию..." value="{{ request.args.get('search', '') }}">
                     </div>
-                    <div class="card-body px-2">
-                        <h5 class="fw-bold mb-0">{{ item.price }} ₽ <span class="text-muted text-decoration-line-through small fw-light">{{ item.old_price }} ₽</span></h5>
-                        <p class="text-muted small mb-1">{{ item.brand }} / {{ item.name }}</p>
-                        <div class="text-warning small mb-3">★ {{ item.rating }} <span class="text-muted">({{ item.reviews }} оценок)</span></div>
-                        <button class="btn w-100 py-2 fw-bold" style="background-color: #cb11ab; color: white; border-radius: 10px;">Завтра</button>
+                    <button type="submit" class="btn btn-warning px-4 fw-bold shadow-sm">Найти</button>
+                    {% if request.args.get('search') or request.args.get('category') or request.args.get('sort') %}
+                        <a href="{{ url_for('catalog') }}" class="btn btn-outline-danger" title="Сбросить всё"><i class="bi bi-x-lg"></i></a>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+            {% for p in products %}
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm product-card transition-all">
+                    <div class="position-relative">
+                        <img src="{{ url_for('static', filename='uploads/' + p.image) }}" class="card-img-top" alt="{{ p.name }}" style="height: 200px; object-fit: cover;">
+                        <span class="position-absolute top-0 end-0 m-2 badge bg-dark opacity-75">{{ p.category }}</span>
+                    </div>
+                    
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title fw-bold text-dark">{{ p.name }}</h5>
+                        <p class="card-text text-muted small flex-grow-1">
+                            {{ p.description[:80] }}{% if p.description|length > 80 %}...{% endif %}
+                        </p>
+                        <div class="mt-3">
+                            <h4 class="text-danger fw-bold mb-3">{{ "{:,.0f}".format(p.price) }} ₽</h4>
+                            <div class="d-grid gap-2">
+                                <a href="{{ url_for('add_to_cart', product_id=p.id) }}" class="btn btn-warning fw-bold shadow-sm">
+                                    <i class="bi bi-cart-plus me-2"></i>В корзину
+                                </a>
+                                <a href="{{ url_for('product_detail', id=p.id) }}" class="btn btn-outline-dark btn-sm">
+                                    Подробнее
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
+            </div>
+            {% else %}
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-search text-muted" style="font-size: 3rem;"></i>
+                <h3 class="mt-3 text-muted">Ничего не нашли по вашему запросу</h3>
+                <p>Попробуйте изменить фильтры или текст поиска.</p>
+                <a href="{{ url_for('catalog') }}" class="btn btn-dark">Сбросить поиск</a>
             </div>
             {% endfor %}
         </div>
     </div>
 </div>
+
+<style>
+    /* Плавный эффект при наведении на карточку */
+    .product-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    .list-group-item.active {
+        background-color: #ffc107 !important;
+        border-color: #ffc107 !important;
+        color: #000 !important;
+        font-weight: bold;
+    }
+</style>
 {% endblock %}

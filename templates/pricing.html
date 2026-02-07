@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Цены{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">💎 Наши цены</h1>
+    
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card text-center">
+                <div class="card-header">
+                    <h4>Базовый</h4>
+                </div>
+                <div class="card-body">
+                    <h2>Бесплатно</h2>
+                    <ul class="list-unstyled mt-3 mb-4">
+                        <li>📦 Стандартная доставка</li>
+                        <li>📧 Email поддержка</li>
+                        <li>🛒 Доступ к каталогу</li>
+                    </ul>
+                    <button class="btn btn-outline-primary">Выбрать</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card text-center border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h4>Профи</h4>
+                </div>
+                <div class="card-body">
+                    <h2>990 ₽/мес</h2>
+                    <ul class="list-unstyled mt-3 mb-4">
+                        <li>🚚 Бесплатная доставка</li>
+                        <li>📞 Приоритетная поддержка</li>
+                        <li>🎁 Скидка 10% на все</li>
+                    </ul>
+                    <button class="btn btn-primary">Выбрать</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card text-center">
+                <div class="card-header">
+                    <h4>Бизнес</h4>
+                </div>
+                <div class="card-body">
+                    <h2>2 990 ₽/мес</h2>
+                    <ul class="list-unstyled mt-3 mb-4">
+                        <li>📦 Оптовая закупка</li>
+                        <li>👥 Менеджер персональный</li>
+                        <li>🏢 Доставка на склад</li>
+                    </ul>
+                    <button class="btn btn-outline-primary">Выбрать</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
