@@ -1,22 +1,70 @@
 {% extends "base.html" %}
-{% block title %}Доставка{% endblock %}
+{% block title %}Доставка и самовывоз{% endblock %}
+
 {% block body %}
-<div class="container py-5 bg-white shadow-sm rounded">
-    <h1 class="fw-bold">🚚 Доставка и оплата</h1>
-    <hr>
-    <div class="row mt-4">
-        <div class="col-md-4">
-            <h4>🚀 Курьером</h4>
-            <p>Привезем завтра в удобное время. Бесплатно от 5000 ₽.</p>
+<div class="container py-5">
+    <h1 class="display-5 fw-bold text-center mb-4">🚚 Доставка и самовывоз</h1>
+
+    <div class="row g-4">
+        <!-- Самовывоз -->
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-header bg-success text-white py-3">
+                    <h4 class="mb-0"><i class="bi bi-shop-window me-2"></i>Самовывоз — бесплатно</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>📍 Леонида Беды, 4, корпус 1, ком. 418А</h5>
+                            <p class="text-muted mb-1">Пн–Пт 10:00–19:00 • Сб 10:00–15:00</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>📍 Машерова, 4, ком. 43</h5>
+                            <p class="text-muted mb-1">Пн–Пт 10:00–19:00 • Сб 10:00–15:00</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="col-md-4">
-            <h4>📦 СДЭК / Почта</h4>
-            <p>Отправка в день заказа. Более 1000 пунктов выдачи.</p>
-        </div>
-        <div class="col-md-4">
-            <h4>🏠 Самовывоз</h4>
-            <p>Заберите сегодня из нашего магазина бесплатно.</p>
+
+        <!-- Яндекс.Карта -->
+        <div class="col-12 mt-4">
+            <h4 class="fw-bold mb-3">🗺️ Наши пункты самовывоза на Яндекс.Карте</h4>
+            <div id="map" style="height: 520px; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.15);"></div>
         </div>
     </div>
 </div>
+
+<!-- Яндекс.Карты -->
+<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU"></script>
+<script>
+    ymaps.ready(function () {
+        var myMap = new ymaps.Map("map", {
+            center: [53.92, 27.58],
+            zoom: 13,
+            controls: ['zoomControl', 'fullscreenControl', 'routeButtonControl']
+        });
+
+        // Первый адрес
+        var placemark1 = new ymaps.Placemark([53.930152, 27.588951], {
+            balloonContentHeader: "Леонида Беды, 4 к1, 418А",
+            balloonContentBody: "Самовывоз бесплатно<br>Пн–Пт 10:00–19:00"
+        }, {
+            preset: 'islands#redDotIcon'
+        });
+
+        // Второй адрес
+        var placemark2 = new ymaps.Placemark([53.911725, 27.576761], {
+            balloonContentHeader: "Машерова, 4, ком. 43",
+            balloonContentBody: "Самовывоз бесплатно<br>Пн–Пт 10:00–19:00"
+        }, {
+            preset: 'islands#redDotIcon'
+        });
+
+        myMap.geoObjects.add(placemark1);
+        myMap.geoObjects.add(placemark2);
+
+        myMap.setBounds(myMap.geoObjects.getBounds(), { checkZoomRange: true });
+    });
+</script>
 {% endblock %}

@@ -7,29 +7,476 @@
             <div class="card-header bg-dark text-white fw-bold">
                 <i class="bi bi-filter-left me-2"></i>Категории
             </div>
-            <div class="list-group list-group-flush">
-                <a href="{{ url_for('catalog') }}" class="list-group-item list-group-item-action {% if not request.args.get('category') %}active{% endif %}">
-                    Все товары
-                </a>
-                <a href="{{ url_for('catalog', category='Удилища') }}" class="list-group-item list-group-item-action {% if request.args.get('category') == 'Удилища' %}active{% endif %}">
-                    Удилища
-                </a>
-                <a href="{{ url_for('catalog', category='Катушки') }}" class="list-group-item list-group-item-action {% if request.args.get('category') == 'Катушки' %}active{% endif %}">
-                    Катушки
-                </a>
-                <a href="{{ url_for('catalog', category='Приманки') }}" class="list-group-item list-group-item-action {% if request.args.get('category') == 'Приманки' %}active{% endif %}">
-                    Приманки
-                </a>
-                <a href="{{ url_for('catalog', category='Аксессуары') }}" class="list-group-item list-group-item-action {% if request.args.get('category') == 'Аксессуары' %}active{% endif %}">
-                    Аксессуары
-                </a>
-            </div>
             
-            <div class="card-body border-top">
-                <h6 class="fw-bold mb-3">Сортировка</h6>
-                <div class="d-grid gap-2">
-                    <a href="{{ url_for('catalog', sort='price_asc', category=request.args.get('category'), search=request.args.get('search')) }}" class="btn btn-outline-secondary btn-sm">Сначала дешевые</a>
-                    <a href="{{ url_for('catalog', sort='price_desc', category=request.args.get('category'), search=request.args.get('search')) }}" class="btn btn-outline-secondary btn-sm">Сначала дорогие</a>
+            <div class="accordion accordion-flush" id="categoryAccordion">
+                <!-- Все товары -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="allGoodsHeading">
+                        <button class="accordion-button {% if not request.args.get('category') %} {% else %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#allGoodsCollapse" aria-expanded="{% if not request.args.get('category') %}true{% else %}false{% endif %}" aria-controls="allGoodsCollapse">
+                            Все товары
+                        </button>
+                    </h2>
+                    <div id="allGoodsCollapse" class="accordion-collapse collapse {% if not request.args.get('category') %}show{% endif %}" aria-labelledby="allGoodsHeading" data-bs-parent="#categoryAccordion">
+                        <div class="accordion-body p-0">
+                            <a href="{{ url_for('catalog') }}" class="list-group-item list-group-item-action {% if not request.args.get('category') %}active{% endif %}">
+                                Показать все
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Зимняя рыбалка -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="winterFishingHeading">
+                        <button class="accordion-button {% if request.args.get('category') in ['Аксессуары зимние', 'Палатки и Выды', 'Балансиры', 'Блесны зимние', 'Удочки зимние', 'Катушки зимние', 'Лески зимние', 'Санки, коробы, ящики', 'Платки зимние', 'Ледобуры', 'Мормышки', 'Сторожки, кивки', 'Поплавки зимние', 'Скрипты'] %} {% else %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#winterFishingCollapse" aria-expanded="{% if request.args.get('category') in ['Аксессуары зимние', 'Палатки и Выды', 'Балансиры', 'Блесны зимние', 'Удочки зимние', 'Катушки зимние', 'Лески зимние', 'Санки, коробы, ящики', 'Платки зимние', 'Ледобуры', 'Мормышки', 'Сторожки, кивки', 'Поплавки зимние', 'Скрипты'] %}true{% else %}false{% endif %}" aria-controls="winterFishingCollapse">
+                            Зимняя рыбалка
+                        </button>
+                    </h2>
+                    <div id="winterFishingCollapse" class="accordion-collapse collapse {% if request.args.get('category') in ['Аксессуары зимние', 'Палатки и Выды', 'Балансиры', 'Блесны зимние', 'Удочки зимние', 'Катушки зимние', 'Лески зимние', 'Санки, коробы, ящики', 'Платки зимние', 'Ледобуры', 'Мормышки', 'Сторожки, кивки', 'Поплавки зимние', 'Скрипты'] %}show{% endif %}" aria-labelledby="winterFishingHeading" data-bs-parent="#categoryAccordion">
+                        <div class="accordion-body p-0">
+                            <div class="list-group list-group-flush">
+                                <a href="{{ url_for('catalog', category='Аксессуары зимние') }}" class="list-group-item list-group-item-action {% if request.args.get('category') == 'Аксессуары зимние' %}active{% endif %}">
+                                    Аксессуары зимние
+                                </a>
+                                <a href="{{ url_for('catalog', category='Палатки и Выды') }}" class="list-group-item list-group-item-action {% if request.args.get('category') == 'Палатки и Выды' %}active{% endif %}">
+                                    Палатки и Выды
+                                </a>
+                                <a href="{{ url_for('catalog', category='Балансиры') }}" class="list-group-item list-group-item-action {% if request.args.get('category') == 'Балансиры' %}active{% endif %}">
+                                    Балансиры
+                                </a>
+                                <a href="{{ url_for('catalog', category='Блесны зимние') }}" class="list-group-item list-group-item-action {% if request.args.get('category') == 'Блесны зимние' %}active{% endif %}">
+                                    Блесны зимние
+                                </a>
+                                <a href="{{ url_for('catalog', category='Удочки зимние') }}" class="list-group-item list-group-item-action {% if request.args.get('category') == 'Удочки зимние' %}active{% endif %}">
+                                    Удочки зимние
+                                </a>
+                                <a href="{{ url_for('catalog', category='Катушки зимние') }}" class="list-group-item list-group-item-action {% if request.args.get('category') == 'Катушки зимние' %}active{% endif %}">
+                                    Катушки зимние
+                                </a>
+                                <a href="{{ url_for('catalog', category='Лески зимние') }}" class="list-group-item list-group-item-action {% if request.args.get('category') == 'Лески зимние' %}active{% endif %}">
+                                    Лески зимние
+                                </a>
+                                <a href="{{ url_for('catalog', category='Санки, коробы, ящики') }}" class="list-group-item list-group-item-action {% if request.args.get('category') == 'Санки, коробы, ящики' %}active{% endif %}">
+                                    Санки, коробы, ящики
+                                </a>
+                                <a href="{{ url_for('catalog', category='Платки зимние') }}" class="list-group-item list-group-item-action {% if request.args.get('category') == 'Платки зимние' %}active{% endif %}">
+                                    Платки зимние
+                                </a>
+                                <a href="{{ url_for('catalog', category='Ледобуры') }}" class="list-group-item list-group-item-action {% if request.args.get('category') == 'Ледобуры' %}active{% endif %}">
+                                    Ледобуры
+                                </a>
+                                <a href="{{ url_for('catalog', category='Мормышки') }}" class="list-group-item list-group-item-action {% if request.args.get('category') == 'Мормышки' %}active{% endif %}">
+                                    Мормышки
+                                </a>
+                                <a href="{{ url_for('catalog', category='Сторожки, кивки') }}" class="list-group-item list-group-item-action {% if request.args.get('category') == 'Сторожки, кивки' %}active{% endif %}">
+                                    Сторожки, кивки
+                                </a>
+                                <a href="{{ url_for('catalog', category='Поплавки зимние') }}" class="list-group-item list-group-item-action {% if request.args.get('category') == 'Поплавки зимние' %}active{% endif %}">
+                                    Поплавки зимние
+                                </a>
+                                <a href="{{ url_for('catalog', category='Скрипты') }}" class="list-group-item list-group-item-action {% if request.args.get('category') == 'Скрипты' %}active{% endif %}">
+                                    Скрипты
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Летняя рыбалка -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="summerFishingHeading">
+                        <button class="accordion-button {% if request.args.get('category') and request.args.get('category')|lower in ['катушки безинерционные', 'катушки безинерционные с байтранером', 'катушки мультипликаторные', 'катушки инерционные', 'запасные шпули', 'спиннинговые удилища', 'фидерные удилища', 'маховые удилища', 'болонские удилища', 'матчевые удилища', 'карповые удилища', 'нахлыстовые удилища', 'блесны', 'воблеры', 'мягкие приманки', 'поролоновые приманки', 'монофильная леска', 'плетеная леска', 'поводочный материал', 'флюорокарбоновая леска', 'лидкор', 'фидергам', 'одиночные', 'офсетные', 'двойники', 'тройники', 'прикормки', 'добавки', 'бойлы', 'насадки и наживки', 'насадочные бойлы и pop-up', 'Сухая ароматика', 'жидкая ароматика', 'спреи', 'пеллетс', 'грузи', 'готовые монтажи', 'кивки, наборы', 'стопоры', 'конусы', 'отводчики', 'термоусадка', 'сигнализаторы поклевки', 'литепраймерия', 'резиновые бусы', 'отбойники', 'вертикали и застежки', 'стойки для бойлов', 'грузи', 'кембрик', 'кормушки для фидерной ловли', 'поводки', 'подобные удилищ', 'коробки', 'сумки', 'емкости', 'тубусы', 'чехлы', 'рюкзаки', 'ящики', 'ручки для подсачеков', 'голова подсачека', 'подсачеки', 'подвесники', 'садки', 'держатели удилищ', 'подставки, стулья', 'инструменты', 'мотовила', 'очки поляризационные', 'безопасность карпа', 'быт на рыбалке', 'кобры, рогатки', 'обвес для платформ и кресел', 'сито для прикормки', 'пва', 'другое', 'скрипты'] %} {% else %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#summerFishingCollapse" aria-expanded="{% if request.args.get('category') and request.args.get('category')|lower in ['катушки безинерционные', 'катушки безинерционные с байтранером', 'катушки мультипликаторные', 'катушки инерционные', 'запасные шпули', 'спиннинговые удилища', 'фидерные удилища', 'маховые удилища', 'болонские удилища', 'матчевые удилища', 'карповые удилища', 'нахлыстовые удилища', 'блесны', 'воблеры', 'мягкие приманки', 'поролоновые приманки', 'монофильная леска', 'плетеная леска', 'поводочный материал', 'флюорокарбоновая леска', 'лидкор', 'фидергам', 'одиночные', 'офсетные', 'двойники', 'тройники', 'прикормки', 'добавки', 'бойлы', 'насадки и наживки', 'насадочные бойлы и pop-up', 'ус ароматика', 'жидкая ароматика', 'спреи', 'пеллетс', 'грузи', 'готовые монтажи', 'кивки, наборы', 'стопоры', 'конусы', 'отводчики', 'термоусадка', 'сигнализаторы поклевки', 'литепраймерия', 'резиновые бусы', 'отбойники', 'вертикали и застежки', 'стойки для бойлов', 'грузи', 'кембрик', 'кормушки для фидерной ловли', 'поводки', 'подобные удилищ', 'коробки', 'сумки', 'емкости', 'тубусы', 'чехлы', 'рюкзаки', 'ящики', 'ручки для подсачеков', 'голова подсачека', 'подсачеки', 'подвесники', 'садки', 'держатели удилищ', 'подставки, стулья', 'инструменты', 'мотовила', 'очки поляризационные', 'безопасность карпа', 'быт на рыбалке', 'кобры, рогатки', 'обвес для платформ и кресел', 'сито для прикормки', 'пва', 'другое', 'скрипты'] %}true{% else %}false{% endif %}" aria-controls="summerFishingCollapse">
+                            Летняя рыбалка
+                        </button>
+                    </h2>
+                    <div id="summerFishingCollapse" class="accordion-collapse collapse {% if request.args.get('category') and request.args.get('category')|lower in ['катушки безинерционные', 'катушки безинерционные с байтранером', 'катушки мультипликаторные', 'катушки инерционные', 'запасные шпули', 'спиннинговые удилища', 'фидерные удилища', 'маховые удилища', 'болонские удилища', 'матчевые удилища', 'карповые удилища', 'нахлыстовые удилища', 'блесны', 'воблеры', 'мягкие приманки', 'поролоновые приманки', 'монофильная леска', 'плетеная леска', 'поводочный материал', 'флюорокарбоновая леска', 'лидкор', 'фидергам', 'одиночные', 'офсетные', 'двойники', 'тройники', 'прикормки', 'добавки', 'бойлы', 'насадки и наживки', 'насадочные бойлы и pop-up', 'ус ароматика', 'жидкая ароматика', 'спреи', 'пеллетс', 'грузи', 'готовые монтажи', 'кивки, наборы', 'стопоры', 'конусы', 'отводчики', 'термоусадка', 'сигнализаторы поклевки', 'литепраймерия', 'резиновые бусы', 'отбойники', 'вертикали и застежки', 'стойки для бойлов', 'грузи', 'кембрик', 'кормушки для фидерной ловли', 'поводки', 'подобные удилищ', 'коробки', 'сумки', 'емкости', 'тубусы', 'чехлы', 'рюкзаки', 'ящики', 'ручки для подсачеков', 'голова подсачека', 'подсачеки', 'подвесники', 'садки', 'держатели удилищ', 'подставки, стулья', 'инструменты', 'мотовила', 'очки поляризационные', 'безопасность карпа', 'быт на рыбалке', 'кобры, рогатки', 'обвес для платформ и кресел', 'сито для прикормки', 'пва', 'другое', 'скрипты'] %}show{% endif %}" aria-labelledby="summerFishingHeading" data-bs-parent="#categoryAccordion">
+                        <div class="accordion-body p-0">
+                            <div class="accordion accordion-flush" id="summerSubAccordion">
+                                <!-- Катушки -->
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="katushkiHeading">
+                                        <button class="accordion-button {% if request.args.get('category') and request.args.get('category')|lower in ['катушки безинерционные', 'катушки безинерционные с байтранером', 'катушки мультипликаторные', 'катушки инерционные', 'запасные шпули'] %} {% else %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#katushkiCollapse" aria-expanded="{% if request.args.get('category') and request.args.get('category')|lower in ['катушки безинерционные', 'катушки безинерционные с байтранером', 'катушки мультипликаторные', 'катушки инерционные', 'запасные шпули'] %}true{% else %}false{% endif %}" aria-controls="katushkiCollapse">
+                                            Катушки
+                                        </button>
+                                    </h2>
+                                    <div id="katushkiCollapse" class="accordion-collapse collapse {% if request.args.get('category') and request.args.get('category')|lower in ['катушки безинерционные', 'катушки безинерционные с байтранером', 'катушки мультипликаторные', 'катушки инерционные', 'запасные шпули'] %}show{% endif %}" aria-labelledby="katushkiHeading" data-bs-parent="#summerSubAccordion">
+                                        <div class="accordion-body p-0">
+                                            <div class="list-group list-group-flush">
+                                                <a href="{{ url_for('catalog', category='Катушки безинерционные') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Катушки безинерционные' %}active{% endif %}">
+                                                    Катушки безинерционные
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Катушки безинерционные с байтранером') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Катушки безинерционные с байтранером' %}active{% endif %}">
+                                                    Катушки безинерционные с байтранером
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Катушки мультипликаторные') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Катушки мультипликаторные' %}active{% endif %}">
+                                                    Катушки мультипликаторные
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Катушки инерционные') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Катушки инерционные' %}active{% endif %}">
+                                                    Катушки инерционные
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Запасные шпули') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Запасные шпули' %}active{% endif %}">
+                                                    Запасные шпули
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Удилища -->
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="udilishaHeading">
+                                        <button class="accordion-button {% if request.args.get('category') and request.args.get('category')|lower in ['спиннинговые удилища', 'фидерные удилища', 'маховые удилища', 'болонские удилища', 'матчевые удилища', 'карповые удилища', 'нахлыстовые удилища'] %} {% else %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#udilishaCollapse" aria-expanded="{% if request.args.get('category') and request.args.get('category')|lower in ['спиннинговые удилища', 'фидерные удилища', 'маховые удилища', 'болонские удилища', 'матчевые удилища', 'карповые удилища', 'нахлыстовые удилища'] %}true{% else %}false{% endif %}" aria-controls="udilishaCollapse">
+                                            Удилища
+                                        </button>
+                                    </h2>
+                                    <div id="udilishaCollapse" class="accordion-collapse collapse {% if request.args.get('category') and request.args.get('category')|lower in ['спиннинговые удилища', 'фидерные удилища', 'маховые удилища', 'болонские удилища', 'матчевые удилища', 'карповые удилища', 'нахлыстовые удилища'] %}show{% endif %}" aria-labelledby="udilishaHeading" data-bs-parent="#summerSubAccordion">
+                                        <div class="accordion-body p-0">
+                                            <div class="list-group list-group-flush">
+                                                <a href="{{ url_for('catalog', category='Спиннинговые удилища') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Спиннинговые удилища' %}active{% endif %}">
+                                                    Спиннинговые удилища
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Фидерные удилища') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Фидерные удилища' %}active{% endif %}">
+                                                    Фидерные удилища
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Маховые удилища') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Маховые удилища' %}active{% endif %}">
+                                                    Маховые удилища
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Болонские удилища') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Болонские удилища' %}active{% endif %}">
+                                                    Болонские удилища
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Матчевые удилища') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Матчевые удилища' %}active{% endif %}">
+                                                    Матчевые удилища
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Карповые удилища') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Карповые удилища' %}active{% endif %}">
+                                                    Карповые удилища
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Нахлыстовые удилища') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Нахлыстовые удилища' %}active{% endif %}">
+                                                    Нахлыстовые удилища
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Приманки -->
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="primankiHeading">
+                                        <button class="accordion-button {% if request.args.get('category') and request.args.get('category')|lower in ['блесны', 'воблеры', 'мягкие приманки', 'поролоновые приманки'] %} {% else %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#primankiCollapse" aria-expanded="{% if request.args.get('category') and request.args.get('category')|lower in ['блесны', 'воблеры', 'мягкие приманки', 'поролоновые приманки'] %}true{% else %}false{% endif %}" aria-controls="primankiCollapse">
+                                            Приманки
+                                        </button>
+                                    </h2>
+                                    <div id="primankiCollapse" class="accordion-collapse collapse {% if request.args.get('category') and request.args.get('category')|lower in ['блесны', 'воблеры', 'мягкие приманки', 'поролоновые приманки'] %}show{% endif %}" aria-labelledby="primankiHeading" data-bs-parent="#summerSubAccordion">
+                                        <div class="accordion-body p-0">
+                                            <div class="list-group list-group-flush">
+                                                <a href="{{ url_for('catalog', category='Блесны') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Блесны' %}active{% endif %}">
+                                                    Блесны
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Воблеры') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Воблеры' %}active{% endif %}">
+                                                    Воблеры
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Мягкие приманки') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Мягкие приманки' %}active{% endif %}">
+                                                    Мягкие приманки
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Поролоновые приманки') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Поролоновые приманки' %}active{% endif %}">
+                                                    Поролоновые приманки
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Леска -->
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="leskaHeading">
+                                        <button class="accordion-button {% if request.args.get('category') and request.args.get('category')|lower in ['монофильная леска', 'плетеная леска', 'поводочный материал', 'флюорокарбоновая леска', 'лидкор', 'фидергам'] %} {% else %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#leskaCollapse" aria-expanded="{% if request.args.get('category') and request.args.get('category')|lower in ['монофильная леска', 'плетеная леска', 'поводочный материал', 'флюорокарбоновая леска', 'лидкор', 'фидергам'] %}true{% else %}false{% endif %}" aria-controls="leskaCollapse">
+                                            Леска
+                                        </button>
+                                    </h2>
+                                    <div id="leskaCollapse" class="accordion-collapse collapse {% if request.args.get('category') and request.args.get('category')|lower in ['монофильная леска', 'плетеная леска', 'поводочный материал', 'флюорокарбоновая леска', 'лидкор', 'фидергам'] %}show{% endif %}" aria-labelledby="leskaHeading" data-bs-parent="#summerSubAccordion">
+                                        <div class="accordion-body p-0">
+                                            <div class="list-group list-group-flush">
+                                                <a href="{{ url_for('catalog', category='Монофильная леска') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Монофильная леска' %}active{% endif %}">
+                                                    Монофильная леска
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Плетеная леска') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Плетеная леска' %}active{% endif %}">
+                                                    Плетеная леска
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Поводочный материал') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Поводочный материал' %}active{% endif %}">
+                                                    Поводочный материал
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Флюорокарбоновая леска') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Флюорокарбоновая леска' %}active{% endif %}">
+                                                    Флюорокарбоновая леска
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Лидкор') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Лидкор' %}active{% endif %}">
+                                                    Лидкор
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Фидергам') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Фидергам' %}active{% endif %}">
+                                                    Фидергам
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Крючки -->
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="kryuchkiHeading">
+                                        <button class="accordion-button {% if request.args.get('category') and request.args.get('category')|lower in ['одиночные', 'офсетные', 'двойники', 'тройники'] %} {% else %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#kryuchkiCollapse" aria-expanded="{% if request.args.get('category') and request.args.get('category')|lower in ['одиночные', 'офсетные', 'двойники', 'тройники'] %}true{% else %}false{% endif %}" aria-controls="kryuchkiCollapse">
+                                            Крючки
+                                        </button>
+                                    </h2>
+                                    <div id="kryuchkiCollapse" class="accordion-collapse collapse {% if request.args.get('category') and request.args.get('category')|lower in ['одиночные', 'офсетные', 'двойники', 'тройники'] %}show{% endif %}" aria-labelledby="kryuchkiHeading" data-bs-parent="#summerSubAccordion">
+                                        <div class="accordion-body p-0">
+                                            <div class="list-group list-group-flush">
+                                                <a href="{{ url_for('catalog', category='Одиночные') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Одиночные' %}active{% endif %}">
+                                                    Одиночные
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Офсетные') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Офсетные' %}active{% endif %}">
+                                                    Офсетные
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Двойники') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Двойники' %}active{% endif %}">
+                                                    Двойники
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Тройники') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Тройники' %}active{% endif %}">
+                                                    Тройники
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Прикормки, добавки -->
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="prikormkiHeading">
+                                        <button class="accordion-button {% if request.args.get('category') and request.args.get('category')|lower in ['прикормки', 'добавки', 'бойлы', 'насадки и наживки', 'насадочные бойлы и pop-up', 'ус ароматика', 'жидкая ароматика', 'спреи', 'пеллетс', 'грузи'] %} {% else %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#prikormkiCollapse" aria-expanded="{% if request.args.get('category') and request.args.get('category')|lower in ['прикормки', 'добавки', 'бойлы', 'насадки и наживки', 'насадочные бойлы и pop-up', 'ус ароматика', 'жидкая ароматика', 'спреи', 'пеллетс', 'грузи'] %}true{% else %}false{% endif %}" aria-controls="prikormkiCollapse">
+                                            Прикормки, добавки
+                                        </button>
+                                    </h2>
+                                    <div id="prikormkiCollapse" class="accordion-collapse collapse {% if request.args.get('category') and request.args.get('category')|lower in ['прикормки', 'добавки', 'бойлы', 'насадки и наживки', 'насадочные бойлы и pop-up', 'ус ароматика', 'жидкая ароматика', 'спреи', 'пеллетс', 'грузи'] %}show{% endif %}" aria-labelledby="prikormkiHeading" data-bs-parent="#summerSubAccordion">
+                                        <div class="accordion-body p-0">
+                                            <div class="list-group list-group-flush">
+                                                <a href="{{ url_for('catalog', category='Прикормки') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Прикормки' %}active{% endif %}">
+                                                    Прикормки
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Добавки') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Добавки' %}active{% endif %}">
+                                                    Добавки
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Бойлы') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Бойлы' %}active{% endif %}">
+                                                    Бойлы
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Насадки и наживки') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Насадки и наживки' %}active{% endif %}">
+                                                    Насадки и наживки
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Насадочные бойлы и Pop-Up') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Насадочные бойлы и Pop-Up' %}active{% endif %}">
+                                                    Насадочные бойлы и Pop-Up
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Ус ароматика') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Ус ароматика' %}active{% endif %}">
+                                                    Ус ароматика
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Жидкая ароматика') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Жидкая ароматика' %}active{% endif %}">
+                                                    Жидкая ароматика
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Спреи') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Спреи' %}active{% endif %}">
+                                                    Спреи
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Пеллетс') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Пеллетс' %}active{% endif %}">
+                                                    Пеллетс
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Грузи') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Грузи' %}active{% endif %}">
+                                                    Грузи
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Оснастка -->
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="osnastkaHeading">
+                                        <button class="accordion-button {% if request.args.get('category') and request.args.get('category')|lower in ['готовые монтажи', 'кивки, наборы', 'стопоры', 'конусы', 'отводчики', 'термоусадка', 'сигнализаторы поклевки', 'литепраймерия', 'резиновые бусы', 'отбойники', 'вертикали и застежки', 'стойки для бойлов', 'грузи', 'кембрик', 'кормушки для фидерной ловли', 'поводки'] %} {% else %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#osnastkaCollapse" aria-expanded="{% if request.args.get('category') and request.args.get('category')|lower in ['готовые монтажи', 'кивки, наборы', 'стопоры', 'конусы', 'отводчики', 'термоусадка', 'сигнализаторы поклевки', 'литепраймерия', 'резиновые бусы', 'отбойники', 'вертикали и застежки', 'стойки для бойлов', 'грузи', 'кембрик', 'кормушки для фидерной ловли', 'поводки'] %}true{% else %}false{% endif %}" aria-controls="osnastkaCollapse">
+                                            Оснастка
+                                        </button>
+                                    </h2>
+                                    <div id="osnastkaCollapse" class="accordion-collapse collapse {% if request.args.get('category') and request.args.get('category')|lower in ['готовые монтажи', 'кивки, наборы', 'стопоры', 'конусы', 'отводчики', 'термоусадка', 'сигнализаторы поклевки', 'литепраймерия', 'резиновые бусы', 'отбойники', 'вертикали и застежки', 'стойки для бойлов', 'грузи', 'кембрик', 'кормушки для фидерной ловли', 'поводки'] %}show{% endif %}" aria-labelledby="osnastkaHeading" data-bs-parent="#summerSubAccordion">
+                                        <div class="accordion-body p-0">
+                                            <div class="list-group list-group-flush">
+                                                <a href="{{ url_for('catalog', category='Готовые монтажи') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Готовые монтажи' %}active{% endif %}">
+                                                    Готовые монтажи
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Кивки, наборы') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Кивки, наборы' %}active{% endif %}">
+                                                    Кивки, наборы
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Стопоры') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Стопоры' %}active{% endif %}">
+                                                    Стопоры
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Конусы') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Конусы' %}active{% endif %}">
+                                                    Конусы
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Отводчики') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Отводчики' %}active{% endif %}">
+                                                    Отводчики
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Термоусадка') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Термоусадка' %}active{% endif %}">
+                                                    Термоусадка
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Сигнализаторы поклевки') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Сигнализаторы поклевки' %}active{% endif %}">
+                                                    Сигнализаторы поклевки
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Литепраймерия') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Литепраймерия' %}active{% endif %}">
+                                                    Литепраймерия
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Резиновые бусы') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Резиновые бусы' %}active{% endif %}">
+                                                    Резиновые бусы
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Отбойники') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Отбойники' %}active{% endif %}">
+                                                    Отбойники
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Вертикали и застежки') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Вертикали и застежки' %}active{% endif %}">
+                                                    Вертикали и застежки
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Стойки для бойлов') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Стойки для бойлов' %}active{% endif %}">
+                                                    Стойки для бойлов
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Грузи') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Грузи' %}active{% endif %}">
+                                                    Грузи
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Кембрик') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Кембрик' %}active{% endif %}">
+                                                    Кембрик
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Кормушки для фидерной ловли') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Кормушки для фидерной ловли' %}active{% endif %}">
+                                                    Кормушки для фидерной ловли
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Поводки') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Поводки' %}active{% endif %}">
+                                                    Поводки
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Сумки, рюкзаки, коробки -->
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="sumkiHeading">
+                                        <button class="accordion-button {% if request.args.get('category') and request.args.get('category')|lower in ['подобные удилищ', 'коробки', 'сумки', 'емкости', 'тубусы', 'чехлы', 'рюкзаки', 'ящики'] %} {% else %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#sumkiCollapse" aria-expanded="{% if request.args.get('category') and request.args.get('category')|lower in ['подобные удилищ', 'коробки', 'сумки', 'емкости', 'тубусы', 'чехлы', 'рюкзаки', 'ящики'] %}true{% else %}false{% endif %}" aria-controls="sumkiCollapse">
+                                            Сумки, рюкзаки, коробки
+                                        </button>
+                                    </h2>
+                                    <div id="sumkiCollapse" class="accordion-collapse collapse {% if request.args.get('category') and request.args.get('category')|lower in ['подобные удилищ', 'коробки', 'сумки', 'емкости', 'тубусы', 'чехлы', 'рюкзаки', 'ящики'] %}show{% endif %}" aria-labelledby="sumkiHeading" data-bs-parent="#summerSubAccordion">
+                                        <div class="accordion-body p-0">
+                                            <div class="list-group list-group-flush">
+                                                <a href="{{ url_for('catalog', category='Подобные удилищ') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Подобные удилищ' %}active{% endif %}">
+                                                    Подобные удилищ
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Коробки') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Коробки' %}active{% endif %}">
+                                                    Коробки
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Сумки') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Сумки' %}active{% endif %}">
+                                                    Сумки
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Емкости') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Емкости' %}active{% endif %}">
+                                                    Емкости
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Тубусы') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Тубусы' %}active{% endif %}">
+                                                    Тубусы
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Чехлы') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Чехлы' %}active{% endif %}">
+                                                    Чехлы
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Рюкзаки') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Рюкзаки' %}active{% endif %}">
+                                                    Рюкзаки
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Ящики') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Ящики' %}active{% endif %}">
+                                                    Ящики
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Подсачеки, садки -->
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="podsachekiHeading">
+                                        <button class="accordion-button {% if request.args.get('category') and request.args.get('category')|lower in ['ручки для подсачеков', 'голова подсачека', 'подсачеки', 'подвесники', 'садки'] %} {% else %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#podsachekiCollapse" aria-expanded="{% if request.args.get('category') and request.args.get('category')|lower in ['ручки для подсачеков', 'голова подсачека', 'подсачеки', 'подвесники', 'садки'] %}true{% else %}false{% endif %}" aria-controls="podsachekiCollapse">
+                                            Подсачеки, садки
+                                        </button>
+                                    </h2>
+                                    <div id="podsachekiCollapse" class="accordion-collapse collapse {% if request.args.get('category') and request.args.get('category')|lower in ['ручки для подсачеков', 'голова подсачека', 'подсачеки', 'подвесники', 'садки'] %}show{% endif %}" aria-labelledby="podsachekiHeading" data-bs-parent="#summerSubAccordion">
+                                        <div class="accordion-body p-0">
+                                            <div class="list-group list-group-flush">
+                                                <a href="{{ url_for('catalog', category='Ручки для подсачеков') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Ручки для подсачеков' %}active{% endif %}">
+                                                    Ручки для подсачеков
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Голова подсачека') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Голова подсачека' %}active{% endif %}">
+                                                    Голова подсачека
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Подсачеки') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Подсачеки' %}active{% endif %}">
+                                                    Подсачеки
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Подвесники') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Подвесники' %}active{% endif %}">
+                                                    Подвесники
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Садки') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Садки' %}active{% endif %}">
+                                                    Садки
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Аксессуары -->
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="aksessuaryHeading">
+                                        <button class="accordion-button {% if request.args.get('category') and request.args.get('category')|lower in ['держатели удилищ', 'подставки, стулья', 'инструменты', 'мотовила', 'очки поляризационные', 'безопасность карпа', 'быт на рыбалке', 'кобры, рогатки', 'обвес для платформ и кресел', 'сито для прикормки', 'пва', 'другое'] %} {% else %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#aksessuaryCollapse" aria-expanded="{% if request.args.get('category') and request.args.get('category')|lower in ['держатели удилищ', 'подставки, стулья', 'инструменты', 'мотовила', 'очки поляризационные', 'безопасность карпа', 'быт на рыбалке', 'кобры, рогатки', 'обвес для платформ и кресел', 'сито для прикормки', 'пва', 'другое'] %}true{% else %}false{% endif %}" aria-controls="aksessuaryCollapse">
+                                            Аксессуары
+                                        </button>
+                                    </h2>
+                                    <div id="aksessuaryCollapse" class="accordion-collapse collapse {% if request.args.get('category') and request.args.get('category')|lower in ['держатели удилищ', 'подставки, стулья', 'инструменты', 'мотовила', 'очки поляризационные', 'безопасность карпа', 'быт на рыбалке', 'кобры, рогатки', 'обвес для платформ и кресел', 'сито для прикормки', 'пва', 'другое'] %}show{% endif %}" aria-labelledby="aksessuaryHeading" data-bs-parent="#summerSubAccordion">
+                                        <div class="accordion-body p-0">
+                                            <div class="list-group list-group-flush">
+                                                <a href="{{ url_for('catalog', category='Держатели удилищ') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Держатели удилищ' %}active{% endif %}">
+                                                    Держатели удилищ
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Подставки, стулья') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Подставки, стулья' %}active{% endif %}">
+                                                    Подставки, стулья
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Инструменты') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Инструменты' %}active{% endif %}">
+                                                    Инструменты
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Мотовила') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Мотовила' %}active{% endif %}">
+                                                    Мотовила
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Очки поляризационные') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Очки поляризационные' %}active{% endif %}">
+                                                    Очки поляризационные
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Безопасность карпа') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Безопасность карпа' %}active{% endif %}">
+                                                    Безопасность карпа
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Быт на рыбалке') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Быт на рыбалке' %}active{% endif %}">
+                                                    Быт на рыбалке
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Кобры, рогатки') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Кобры, рогатки' %}active{% endif %}">
+                                                    Кобры, рогатки
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Обвес для платформ и кресел') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Обвес для платформ и кресел' %}active{% endif %}">
+                                                    Обвес для платформ и кресел
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Сито для прикормки') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Сито для прикормки' %}active{% endif %}">
+                                                    Сито для прикормки
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='ПВА') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'ПВА' %}active{% endif %}">
+                                                    ПВА
+                                                </a>
+                                                <a href="{{ url_for('catalog', category='Другое') }}" class="list-group-item list-group-item-action ps-4 {% if request.args.get('category') == 'Другое' %}active{% endif %}">
+                                                    Другое
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                               
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -43,13 +490,10 @@
                         <input type="hidden" name="category" value="{{ request.args.get('category') }}">
                     {% endif %}
                     <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                        <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Поиск по названию или описанию..." value="{{ request.args.get('search', '') }}">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" class="form-control border-start-0" placeholder="Поиск по названию..." value="{{ request.args.get('search') or '' }}">
                     </div>
-                    <button type="submit" class="btn btn-warning px-4 fw-bold shadow-sm">Найти</button>
-                    {% if request.args.get('search') or request.args.get('category') or request.args.get('sort') %}
-                        <a href="{{ url_for('catalog') }}" class="btn btn-outline-danger" title="Сбросить всё"><i class="bi bi-x-lg"></i></a>
-                    {% endif %}
+                    <button class="btn btn-warning fw-bold" type="submit">Найти</button>
                 </form>
             </div>
         </div>
