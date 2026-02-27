@@ -1,47 +1,229 @@
 {% extends "base.html" %}
+
 {% block body %}
-<div class="container bg-white p-4 shadow-sm rounded">
-    <h2 class="fw-bold mb-4">🛒 Корзина</h2>
+<div class="container mt-5">
+    <h1 class="mb-4">🛒 Корзина</h1>
+
     {% if items %}
-    <table class="table align-middle">
-        <thead>
-            <tr><th>Товар</th><th>Цена</th><th>Кол-во</th><th>Итого</th><th></th></tr>
-        </thead>
-        <tbody>
-            {% for item in items %}
-            <tr>
-                <td>{{ item.product.name }}</td>
-                <td>{{ item.product.price }} ₽</td>
-                <td>
-                    <div class="btn-group btn-group-sm">
-                        <a href="{{ url_for('update_cart', id=item.id, action='dec') }}" class="btn btn-outline-dark">-</a>
-                        <span class="btn btn-light disabled">{{ item.quantity }}</span>
-                        <a href="{{ url_for('update_cart', id=item.id, action='inc') }}" class="btn btn-outline-dark">+</a>
+    <div class="row g-3">
+        {% for item in items %}
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-body d-flex align-items-center">
+                    <img src="{{ url_for('static', filename='uploads/' + item.product.image) }}"
+                         class="me-3 rounded" style="width:90px;height:90px;object-fit:cover;">
+                    <div class="flex-grow-1">
+                        <h5 class="mb-1">{{ item.product.name }}</h5>
+                        <p class="mb-1 text-muted">
+                            {{ item.quantity }} × {{ item.product.price|round(0) }} ₽ = 
+                            <strong>{{ item.subtotal|round(0) }} ₽</strong>
+                        </p>
                     </div>
-                </td>
-                <td>{{ item.product.price * item.quantity }} ₽</td>
-                <td><a href="{{ url_for('remove_from_cart', id=item.id) }}" class="text-danger">🗑️</a></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    
-    <div class="row mt-4 border-top pt-4">
-        <div class="col-md-6">
-            <h5>🚚 Способ доставки:</h5>
-            <select class="form-select w-75 mt-2">
-                <option>Курьер (Завтра)</option>
-                <option>Пункт СДЭК</option>
-                <option>Самовывоз</option>
-            </select>
+                    <div class="text-end">
+                        <a href="{{ url_for('update_cart', id=item.product.id, action='dec') }}" 
+                           class="btn btn-sm btn-outline-secondary">-</a>
+                        <span class="mx-2 fw-bold">{{ item.quantity }}</span>
+                        <a href="{{ url_for('update_cart', id=item.product.id, action='inc') }}" 
+                           class="btn btn-sm btn-outline-secondary">+</a>
+                        <a href="{{ url_for('remove_from_cart', id=item.product.id) }}" 
+                           class="btn btn-sm btn-danger ms-3">🗑</a>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="col-md-6 text-end">
-            <h3>Итого: <span class="text-danger">{{ total }} ₽</span></h3>
-            <button class="btn btn-warning btn-lg fw-bold px-5">Оформить</button>
-        </div>
+        {% endfor %}
+    </div>
+
+    <div class="text-end my-4">
+        <h4>Итого: <strong class="text-danger fs-3">{{ total|round(0) }} ₽</strong></h4>
     </div>
     {% else %}
-    <div class="text-center py-5"><h4>Пусто 🎣</h4><a href="{{ url_for('catalog') }}" class="btn btn-dark">В каталог</a></div>
+    <div class="text-center py-5">
+        <h3 class="text-muted">Корзина пуста</h3>
+        <a href="{{ url_for('catalog') }}" class="btn btn-warning mt-3 px-5">В каталог</a>
+    </div>
     {% endif %}
+
+    <hr class="my-5">
+
+    <h2 class="mb-4">Оформление заказа</h2>
+
+    <form method="POST" action="{{ url_for('checkout') }}" id="checkout-form">
+
+        <h5 class="mb-3">Способ доставки</h5>
+        <div class="mb-4">
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="delivery_type" value="pickup" id="pickup" required>
+                <label class="form-check-label" for="pickup">Самовывоз</label>
+            </div>
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="delivery_type" value="courier" id="courier">
+                <label class="form-check-label" for="courier">Доставка курьером</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="delivery_type" value="post" id="radio-post">
+                <label class="form-check-label" for="radio-post">Почта (Европочта / Белпочта)</label>
+            </div>
+        </div>
+
+        <div id="address-fields" class="mb-4">
+            <input type="text" name="city" class="form-control mb-2" placeholder="Город" value="Минск">
+            <input type="text" name="address" class="form-control" placeholder="Улица, дом, квартира">
+        </div>
+
+        <div id="map-block" style="display:none;">
+            <h5 class="mb-3">Выберите пункт выдачи</h5>
+
+            <div class="btn-group mb-3">
+                <button type="button" class="btn btn-outline-primary" onclick="showType('all')">Все</button>
+                <button type="button" class="btn btn-outline-danger" onclick="showType('Европочта')">Европочта</button>
+                <button type="button" class="btn btn-outline-info" onclick="showType('Белпочта')">Белпочта</button>
+            </div>
+
+            <div id="yandex-map" style="width:100%; height:620px; border:2px solid #0d6efd; border-radius:12px;"></div>
+
+            <input type="hidden" id="selected_post_name" name="selected_post_name">
+            <input type="hidden" id="selected_post_address" name="selected_post_address">
+
+            <div id="selected-info" class="alert alert-success mt-3 d-none">
+                <strong>Выбрано:</strong> <span id="selected-text"></span>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success btn-lg w-100 mt-4 py-3 fw-bold">
+            Оформить заказ
+        </button>
+    </form>
 </div>
+
+<script src="https://api-maps.yandex.ru/2.1/?apikey=ВАШ_КЛЮЧ&lang=ru_RU" type="text/javascript"></script>
+
+<script>
+// ==============================================
+// ТОЧКИ БЕРУТСЯ ИЗ ФАЙЛА post_points.json
+// ==============================================
+let allPoints = [];
+
+// ==============================================
+// ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
+// ==============================================
+let map = null;
+let clusterer = null;
+let currentFilter = 'all';
+
+// ==============================================
+// ЗАГРУЗКА ТОЧЕК ИЗ JSON
+// ==============================================
+async function loadPoints() {
+    try {
+        const response = await fetch("{{ url_for('static', filename='data/post_points.json') }}");
+        allPoints = await response.json();
+        showPoints(currentFilter);
+    } catch (e) {
+        console.error("Ошибка загрузки post_points.json", e);
+    }
+}
+
+// ==============================================
+// ИНИЦИАЛИЗАЦИЯ КАРТЫ
+// ==============================================
+function initMap() {
+    if (map) return;
+
+    ymaps.ready(() => {
+        map = new ymaps.Map('yandex-map', {
+            center: [53.90, 27.56],
+            zoom: 7,
+            controls: ['zoomControl', 'searchControl', 'fullscreenControl']
+        });
+
+        clusterer = new ymaps.Clusterer({
+            preset: 'islands#invertedVioletClusterIcons',
+            groupByCoordinates: false,
+            clusterDisableClickZoom: false,          // КЛИК ПО ЧИСЛУ → ЗУМ + РАСКРЫТИЕ
+            clusterZoomRange: [0, 19],
+            clusterBalloonContentLayout: 'cluster#balloonCarousel',
+            clusterBalloonPagerSize: 5,
+            clusterBalloonContentLayoutWidth: 320,
+            clusterBalloonContentLayoutHeight: 220,
+            clusterHideIconOnBalloonOpen: false,
+            geoObjectHideIconOnBalloonOpen: false
+        });
+
+        map.geoObjects.add(clusterer);
+        loadPoints();  // Загружаем точки после создания карты
+    });
+}
+
+// ==============================================
+// ПОКАЗ ТОЧЕК С ФИЛЬТРОМ
+// ==============================================
+function showPoints(filter) {
+    if (!clusterer) return;
+
+    clusterer.removeAll();
+
+    const placemarks = allPoints
+        .filter(p => filter === 'all' || p.type === filter)
+        .map(p => {
+            return new ymaps.Placemark(p.coords, {
+                hintContent: p.addr,
+                balloonContentHeader: `<b>${p.type}</b>`,
+                balloonContentBody: `
+                    <div style="font-size:14px; margin:10px 0;">
+                        <strong>${p.addr}</strong>
+                    </div>
+                    <button class="btn btn-primary btn-sm w-100"
+                            onclick="selectPoint('${p.type.replace(/'/g,"\\'")}', '${p.addr.replace(/'/g,"\\'")}')">
+                        ✅ Выбрать этот пункт
+                    </button>
+                `
+            }, {
+                preset: p.type === 'Европочта' ? 'islands#redIcon' : 'islands#blueIcon'
+            });
+        });
+
+    clusterer.add(placemarks);
+}
+
+// ==============================================
+// ВЫБОР ПУНКТА
+// ==============================================
+function selectPoint(type, addr) {
+    document.getElementById('selected_post_name').value = `${type} — ${addr}`;
+    document.getElementById('selected_post_address').value = addr;
+    document.getElementById('selected-text').textContent = `${type} — ${addr}`;
+    document.getElementById('selected-info').classList.remove('d-none');
+    document.getElementById('selected-info').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ==============================================
+// ФИЛЬТРЫ
+// ==============================================
+function showType(filter) {
+    currentFilter = filter;
+    showPoints(filter);
+}
+
+// ==============================================
+// ПЕРЕКЛЮЧЕНИЕ БЛОКОВ
+// ==============================================
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('input[name="delivery_type"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+            const mapBlock = document.getElementById('map-block');
+            const addrFields = document.getElementById('address-fields');
+
+            if (radio.value === 'post') {
+                mapBlock.style.display = 'block';
+                addrFields.style.display = 'none';
+                initMap();
+            } else {
+                mapBlock.style.display = 'none';
+                addrFields.style.display = 'block';
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

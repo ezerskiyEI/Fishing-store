@@ -1,34 +1,52 @@
 {% extends "base.html" %}
-{% block title %}Акции и Скидки{% endblock %}
+{% block title %}Акции - Fishing Shop{% endblock %}
+
 {% block body %}
+<div class="container py-5">
+    <h1 class="display-5 fw-bold mb-4">Акции и скидки</h1>
 
-<div class="text-center mb-5">
-    <h1 class="fw-bold">🔥 Горячие предложения</h1>
-    <p class="text-muted">Успей купить выгодно!</p>
-</div>
-
-<div class="row row-cols-1 row-cols-md-2 g-4">
-    {% for promo in promos %}
-    <div class="col">
-        <div class="card h-100 shadow-sm border-0 hover-card overflow-hidden">
-            <div class="row g-0 h-100">
-                <div class="col-md-5">
-                    <img src="{{ promo.img }}" class="img-fluid h-100 w-100" style="object-fit: cover;" alt="...">
+    <div class="row g-4">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm border-0 h-100">
+                <img src="{{ url_for('static', filename='promo1.jpg') }}" class="card-img-top" alt="Акция 1" style="height: 200px; object-fit: cover;">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">Скидка 30% на ледобуры</h5>
+                    <p class="text-muted">До конца февраля! Надёжные ледобуры для зимней рыбалки по сниженной цене.</p>
+                    <a href="{{ url_for('catalog', category='Ледобуры') }}" class="btn btn-warning">Купить</a>
                 </div>
-                <div class="col-md-7">
-                    <div class="card-body d-flex flex-column h-100 justify-content-center">
-                        <h5 class="card-title fw-bold text-primary">{{ promo.title }}</h5>
-                        <p class="card-text">{{ promo.desc }}</p>
-                        <div class="mt-auto d-flex align-items-center justify-content-between">
-                            <span class="badge bg-danger fs-5">{{ promo.discount }}</span>
-                            <a href="{{ url_for('catalog') }}" class="btn btn-outline-dark btn-sm">К товарам</a>
-                        </div>
-                    </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm border-0 h-100">
+                <img src="{{ url_for('static', filename='promo2.jpg') }}" class="card-img-top" alt="Акция 2" style="height: 200px; object-fit: cover;">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">Новые спиннинги -20%</h5>
+                    <p class="text-muted">Коллекция Shimano и Daiwa. Идеально для летней рыбалки.</p>
+                    <a href="{{ url_for('catalog', category='Спиннинговые удилища') }}" class="btn btn-warning">Купить</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm border-0 h-100">
+                <img src="{{ url_for('static', filename='promo3.jpg') }}" class="card-img-top" alt="Акция 3" style="height: 200px; object-fit: cover;">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">Палатки для зимы -40%</h5>
+                    <p class="text-muted">Ликвидация остатков. Комфорт и тепло на рыбалке.</p>
+                    <a href="{{ url_for('catalog', category='Палатки и Выды') }}" class="btn btn-warning">Купить</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm border-0 h-100">
+                <img src="{{ url_for('static', filename='promo4.jpg') }}" class="card-img-top" alt="Акция 4" style="height: 200px; object-fit: cover;">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">Бесплатная доставка от 5000 руб.</h5>
+                    <p class="text-muted">На все товары. Закажите сейчас!</p>
+                    <a href="{{ url_for('catalog') }}" class="btn btn-warning">В каталог</a>
                 </div>
             </div>
         </div>
     </div>
-    {% endfor %}
-</div>
 
+</div>
 {% endblock %}

@@ -2,58 +2,91 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Fishing AI Shop</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Fishing Shop{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
     <style>
         .navbar-custom { background-color: #1a1d20; }
-        .nav-link { color: #fff !important; }
+        .nav-link { color: rgba(255,255,255,0.8) !important; transition: 0.3s; }
         .nav-link:hover { color: #ffc107 !important; }
+        .nav-link.active { color: #fff !important; font-weight: bold; }
     </style>
 </head>
-<body class="bg-light">
-<nav class="navbar navbar-expand-lg navbar-custom shadow-sm">
+<body class="d-flex flex-column min-vh-100 bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-custom sticky-top shadow">
     <div class="container">
-        <a class="navbar-brand text-white fw-bold" href="{{ url_for('index') }}">🎣 FISHING SHOP</a>
-        <div class="collapse navbar-collapse">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item"><a href="{{ url_for('index') }}" class="nav-link">Главная</a></li>
+        <a class="navbar-brand text-white fw-bold d-flex align-items-center" href="{{ url_for('index') }}">
+            <i class="bi bi-tsunami me-2 text-warning"></i> FISHING SHOP
+        </a>
+        <button class="navbar-toggler navbar-dark" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item"><a href="{{ url_for('catalog') }}" class="nav-link">Каталог</a></li>
-                <li class="nav-item"><a href="{{ url_for('promotions') }}" class="nav-link text-warning">Акции</a></li>
-                <li class="nav-item"><a href="{{ url_for('delivery') }}" class="nav-link text-warning">Доставка</a></li>
-                  <li class="nav-item"><a href="{{ url_for('about') }}" class="nav-link text-warning">О нас</a></li>
-                <li class="nav-item">
-               
+                <li class="nav-item"><a href="{{ url_for('promotions') }}" class="nav-link">Акции</a></li>
+                <li class="nav-item"><a href="{{ url_for('delivery') }}" class="nav-link">Доставка</a></li>
+                <li class="nav-item"><a href="{{ url_for('about') }}" class="nav-link">О нас</a></li>
             </ul>
-            <div class="d-flex align-items-center">
+            
+            <div class="d-flex align-items-center gap-3">
+                <a href="{{ url_for('cart') }}" class="btn btn-outline-light position-relative border-0">
+                    <i class="bi bi-cart3 fs-5"></i>
+                    {% if cart_items_count > 0 %}
+                    <span class="position-absolute top-10 start-90 translate-middle badge rounded-pill bg-danger border border-light" style="font-size: 0.7rem;">
+                        {{ cart_items_count }}
+                    </span>
+                    {% endif %}
+                </a>
+
                 {% if current_user.is_authenticated %}
                     <div class="dropdown">
-                        <button class="btn btn-outline-light dropdown-toggle" data-bs-toggle="dropdown">
-                            {{ current_user.username }}
+                        <button class="btn btn-sm btn-light dropdown-toggle fw-bold" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1"></i> {{ current_user.username }}
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
+                        <ul class="dropdown-menu dropdown-menu-end shadow">
                             {% if current_user.is_admin %}
-                                <li><a class="dropdown-item fw-bold text-danger" href="{{ url_for('admin_panel') }}">⚙️ Админка</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                            {% endif %}a
+                            <li><a class="dropdown-item text-danger fw-bold" href="{{ url_for('admin_panel') }}">Админка</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            {% endif %}
                             <li><a class="dropdown-item" href="{{ url_for('profile') }}">Профиль</a></li>
-                            <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">Выйти</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('logout') }}">Выход</a></li>
                         </ul>
                     </div>
                 {% else %}
-                    <a href="{{ url_for('login') }}" class="btn btn-outline-light me-2">Войти</a>
-                    <a href="{{ url_for('register') }}" class="btn btn-warning fw-bold">Регистрация</a>
+                    <a href="{{ url_for('login') }}" class="btn btn-sm btn-warning fw-bold">Вход</a>
                 {% endif %}
             </div>
         </div>
     </div>
 </nav>
 
-<div class="container mt-4">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}{% for c, m in messages %}<div class="alert alert-{{c}}">{{m}}</div>{% endfor %}{% endif %}
-    {% endwith %}
-    {% block body %}{% endblock %}
+<div class="flex-grow-1">
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block body %}{% endblock %}
+    </div>
 </div>
+
+<footer class="bg-dark text-white py-4 mt-5">
+    <div class="container text-center">
+        <p class="mb-0">&copy; 2026 Fishing Shop. Хорошего улова!</p>
+    </div>
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
