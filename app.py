@@ -14,7 +14,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'fishing_ultra_mega_key_2026'
 app.config['UPLOAD_FOLDER'] = 'static/avatars'
 app.config['PRODUCT_UPLOADS'] = 'static/uploads'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:8001653@localhost:5432/fishing_shop'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:MtSgofBGovxMowXdvOyRuebJAAXZHShm@maglev.proxy.rlwy.net:18633/railway'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Настройки почты
