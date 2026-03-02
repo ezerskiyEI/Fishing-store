@@ -1,5 +1,6 @@
 import os
 import random
+import datetime
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
@@ -17,7 +18,6 @@ app.config['PRODUCT_UPLOADS'] = 'static/uploads'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:MtSgofBGovxMowXdvOyRuebJAAXZHShm@maglev.proxy.rlwy.net:18633/railway'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Настройки почты
 app.config.update(dict(
     MAIL_SERVER='smtp.gmail.com',
     MAIL_PORT=587,
@@ -32,7 +32,7 @@ mail = Mail(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-# --- МОДЕЛИ ---
+# ====================== МОДЕЛИ ======================
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -51,18 +51,40 @@ class Product(db.Model):
     description = db.Column(db.Text)
     image = db.Column(db.String(255), default='no_image.png')
 
+class Cart(db.Model):
+    __tablename__ = 'cart'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id', ondelete='CASCADE'))
+    quantity = db.Column(db.Integer, default=1)
+
+class Order(db.Model):
+    __tablename__ = 'orders'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    total_price = db.Column(db.Float)
+    delivery_address = db.Column(db.String(255))
+    status = db.Column(db.String(50), default='В обработке')
+
+class OrderItem(db.Model):
+    __tablename__ = 'order_items'
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id', ondelete='CASCADE'))
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id', ondelete='SET NULL'))
+    quantity = db.Column(db.Integer)
+    price = db.Column(db.Float)
+
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
-# ====================== ЗАЩИТА КОРЗИНЫ ======================
+# ====================== КОРЗИНА ======================
 def get_clean_cart():
-    """Всегда возвращает корректный список словарей и чинит сессию"""
     if 'cart' not in session or not isinstance(session['cart'], list):
         session['cart'] = []
         session.modified = True
         return []
-
     clean = []
     for item in session['cart']:
         if isinstance(item, dict) and isinstance(item.get('id'), int):
@@ -73,7 +95,6 @@ def get_clean_cart():
     session.modified = True
     return clean
 
-# Счетчик корзины для всех страниц
 @app.context_processor
 def inject_cart_count():
     cart = get_clean_cart()
@@ -89,8 +110,7 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# --- МАРШРУТЫ ---
-
+# ====================== МАРШРУТЫ ======================
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -165,8 +185,7 @@ def product_detail(id):
     product = db.session.get(Product, id)
     return render_template('product_detail.html', product=product)
 
-# --- ЛОГИКА КОРЗИНЫ ---
-
+# --- КОРЗИНА ---
 @app.route('/cart')
 def cart():
     cart_session = get_clean_cart()
@@ -272,6 +291,21 @@ def admin_delete(id):
         db.session.delete(p)
         db.session.commit()
     return redirect(url_for('admin_panel'))
+
+@app.route('/admin/orders')
+@admin_required
+def admin_orders():
+    filter_type = request.args.get('filter', 'active')  # по умолчанию активные
+    
+    query = Order.query.order_by(Order.created_at.desc())
+    
+    if filter_type == 'active':
+        query = query.filter(Order.status.notin_(['Доставлен', 'Отменён']))
+    elif filter_type == 'completed':
+        query = query.filter(Order.status.in_(['Доставлен', 'Отменён']))
+    
+    orders = query.all()
+    return render_template('admin_orders.html', orders=orders, filter_type=filter_type)
 
 @app.route('/promotions')
 def promotions(): return render_template('promotions.html')
