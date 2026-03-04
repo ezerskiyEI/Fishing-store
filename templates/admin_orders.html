@@ -2,6 +2,30 @@
 {% block title %}Заказы — Админ{% endblock %}
 
 {% block body %}
+<style>
+    /* Яркие вкладки */
+    .nav-tabs .nav-link {
+        background-color: #e9ecef;      /* светлый фон для всех */
+        border: 1px solid #ced4da;
+        color: #495057;
+        margin-right: 5px;
+        border-radius: 0.5rem 0.5rem 0 0;
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        transition: all 0.2s;
+    }
+    .nav-tabs .nav-link.active {
+        background-color: #0d6efd;      /* ярко-синий для активной */
+        color: white;
+        border-color: #0d6efd #0d6efd #fff;
+        box-shadow: 0 -2px 5px rgba(13,110,253,0.3);
+    }
+    .nav-tabs .nav-link:hover:not(.active) {
+        background-color: #11579e;
+        border-color: #adb5bd;
+    }
+</style>
+
 <div class="container py-4">
     <h1 class="mb-4">📦 Управление заказами</h1>
 
@@ -13,10 +37,11 @@
             <a class="nav-link {{ 'active' if filter_type == 'all' else '' }}" href="{{ url_for('admin_orders', filter='all') }}">Все</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link {{ 'active' if filter_type == 'completed' else '' }}" href="{{ url_for('admin_orders', filter='completed') }}">Завершенные</a>
+            <a class="nav-link {{ 'active' if filter_type == 'completed' else '' }}" href="{{ url_for('admin_orders', filter='completed') }}">Завершённые</a>
         </li>
     </ul>
 
+    <!-- Таблица заказов (без изменений) -->
     <div class="card shadow-sm border-0">
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
