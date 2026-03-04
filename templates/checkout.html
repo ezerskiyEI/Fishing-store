@@ -1,18 +1,242 @@
 {% extends "base.html" %}
+
 {% block body %}
-<h2>Оформление заказа</h2>
+<div class="container mt-5">
+    <h1 class="mb-4">📦 Оформление заказа</h1>
+    <p class="text-end fs-4">Итого: <strong class="text-danger">{{ total|round(0) }} ₽</strong></p>
 
-<form method="POST">
-    <div class="form-check">
-        <input class="form-check-input" type="radio" name="delivery" value="Самовывоз" checked>
-        <label class="form-check-label">Самовывоз</label>
-    </div>
+    <form method="POST" id="checkout-form">
 
-    <div class="form-check">
-        <input class="form-check-input" type="radio" name="delivery" value="Почта России">
-        <label class="form-check-label">Почта России</label>
-    </div>
+        <!-- Способ доставки -->
+        <h5 class="mb-3">Способ доставки</h5>
+        <div class="mb-4">
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="delivery_type" value="pickup" id="pickup" required>
+                <label class="form-check-label" for="pickup">Самовывоз</label>
+            </div>
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="delivery_type" value="courier" id="courier">
+                <label class="form-check-label" for="courier">Доставка курьером</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="delivery_type" value="post" id="radio-post">
+                <label class="form-check-label" for="radio-post">Почта (Европочта / Белпочта)</label>
+            </div>
+        </div>
 
-    <button class="btn btn-success mt-3 w-100">Подтвердить заказ</button>
-</form>
+        <!-- Обычные поля адреса (для самовывоза и курьера) -->
+        <div id="address-fields" class="mb-4">
+            <input type="text" name="city" class="form-control mb-2" placeholder="Город" value="Минск">
+            <input type="text" name="address" class="form-control" placeholder="Улица, дом, квартира">
+        </div>
+
+        <!-- Блок карты для почты (скрыт по умолчанию) -->
+        <div id="map-block" style="display:none;">
+            <h5 class="mb-3">Выберите пункт выдачи</h5>
+
+            <div class="btn-group mb-3">
+                <button type="button" class="btn btn-outline-primary" onclick="showType('all')">Все</button>
+                <button type="button" class="btn btn-outline-danger" onclick="showType('Европочта')">Европочта</button>
+                <button type="button" class="btn btn-outline-info" onclick="showType('Белпочта')">Белпочта</button>
+            </div>
+
+            <div id="yandex-map" style="width:100%; height:620px; border:2px solid #0d6efd; border-radius:12px;"></div>
+
+            <input type="hidden" id="selected_post_name" name="selected_post_name">
+            <input type="hidden" id="selected_post_address" name="selected_post_address">
+
+            <div id="selected-info" class="alert alert-success mt-3 d-none">
+                <strong>Выбрано:</strong> <span id="selected-text"></span>
+            </div>
+        </div>
+
+        <!-- ВЫБОР СПОСОБА УВЕДОМЛЕНИЯ (НОВЫЙ БЛОК) -->
+        <hr class="my-5">
+        <h5 class="mb-3">Куда отправить чек и трек-код?</h5>
+        <div class="mb-4">
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="notification_method" value="email" id="email" checked>
+                <label class="form-check-label" for="email">
+                    На почту: <strong>{{ current_user.email }}</strong>
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="notification_method" value="telegram" id="telegram">
+                <label class="form-check-label" for="telegram">
+                    В Telegram
+                    {% if current_user.tg_id %}
+                        <span class="text-muted">(ваш ID: {{ current_user.tg_id }})</span>
+                    {% endif %}
+                </label>
+            </div>
+        </div>
+
+        <!-- Поле Telegram ID (появляется при выборе Telegram) -->
+        <div class="mb-4 d-none" id="tg-field">
+            <label class="form-label fw-bold">Telegram ID</label>
+            <input type="text" name="tg_contact" class="form-control" 
+                   placeholder="Например: 123456789"
+                   value="{{ current_user.tg_id or '' }}">
+            <div class="form-text text-muted small">
+                Узнать свой ID можно у бота @userinfobot. Новый ID сохранится в вашем профиле.
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success btn-lg w-100 mt-4 py-3 fw-bold">
+            ✅ Оформить заказ
+        </button>
+    </form>
+</div>
+
+<!-- Подключение Yandex Maps и скрипты -->
+<script src="https://api-maps.yandex.ru/2.1/?apikey=ВАШ_КЛЮЧ&lang=ru_RU" type="text/javascript"></script>
+
+<script>
+// ==============================================
+// ТОЧКИ БЕРУТСЯ ИЗ ФАЙЛА post_points.json
+// ==============================================
+let allPoints = [];
+
+// ==============================================
+// ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
+// ==============================================
+let map = null;
+let clusterer = null;
+let currentFilter = 'all';
+
+// ==============================================
+// ЗАГРУЗКА ТОЧЕК ИЗ JSON
+// ==============================================
+async function loadPoints() {
+    try {
+        const response = await fetch("{{ url_for('static', filename='data/post_points.json') }}");
+        allPoints = await response.json();
+        showPoints(currentFilter);
+    } catch (e) {
+        console.error("Ошибка загрузки post_points.json", e);
+    }
+}
+
+// ==============================================
+// ИНИЦИАЛИЗАЦИЯ КАРТЫ
+// ==============================================
+function initMap() {
+    if (map) return;
+
+    ymaps.ready(() => {
+        map = new ymaps.Map('yandex-map', {
+            center: [53.90, 27.56],
+            zoom: 7,
+            controls: ['zoomControl', 'searchControl', 'fullscreenControl']
+        });
+
+        clusterer = new ymaps.Clusterer({
+            preset: 'islands#invertedVioletClusterIcons',
+            groupByCoordinates: false,
+            clusterDisableClickZoom: false,
+            clusterZoomRange: [0, 19],
+            clusterBalloonContentLayout: 'cluster#balloonCarousel',
+            clusterBalloonPagerSize: 5,
+            clusterBalloonContentLayoutWidth: 320,
+            clusterBalloonContentLayoutHeight: 220,
+            clusterHideIconOnBalloonOpen: false,
+            geoObjectHideIconOnBalloonOpen: false
+        });
+
+        map.geoObjects.add(clusterer);
+        loadPoints();
+    });
+}
+
+// ==============================================
+// ПОКАЗ ТОЧЕК С ФИЛЬТРОМ
+// ==============================================
+function showPoints(filter) {
+    if (!clusterer) return;
+
+    clusterer.removeAll();
+
+    const placemarks = allPoints
+        .filter(p => filter === 'all' || p.type === filter)
+        .map(p => {
+            return new ymaps.Placemark(p.coords, {
+                hintContent: p.addr,
+                balloonContentHeader: `<b>${p.type}</b>`,
+                balloonContentBody: `
+                    <div style="font-size:14px; margin:10px 0;">
+                        <strong>${p.addr}</strong>
+                    </div>
+                    <button class="btn btn-primary btn-sm w-100"
+                            onclick="selectPoint('${p.type.replace(/'/g,"\\'")}', '${p.addr.replace(/'/g,"\\'")}')">
+                        ✅ Выбрать этот пункт
+                    </button>
+                `
+            }, {
+                preset: p.type === 'Европочта' ? 'islands#redIcon' : 'islands#blueIcon'
+            });
+        });
+
+    clusterer.add(placemarks);
+}
+
+// ==============================================
+// ВЫБОР ПУНКТА
+// ==============================================
+function selectPoint(type, addr) {
+    document.getElementById('selected_post_name').value = `${type} — ${addr}`;
+    document.getElementById('selected_post_address').value = addr;
+    document.getElementById('selected-text').textContent = `${type} — ${addr}`;
+    document.getElementById('selected-info').classList.remove('d-none');
+    document.getElementById('selected-info').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ==============================================
+// ФИЛЬТРЫ
+// ==============================================
+function showType(filter) {
+    currentFilter = filter;
+    showPoints(filter);
+}
+
+// ==============================================
+// ПЕРЕКЛЮЧЕНИЕ БЛОКОВ ДОСТАВКИ
+// ==============================================
+document.addEventListener('DOMContentLoaded', () => {
+    const tgRadio = document.getElementById('telegram');
+    const emailRadio = document.getElementById('email');
+    const tgField = document.getElementById('tg-field');
+    const tgInput = tgField.querySelector('input');
+
+    function toggleTg() {
+        if (tgRadio.checked) {
+            tgField.classList.remove('d-none');
+            tgInput.required = true;
+        } else {
+            tgField.classList.add('d-none');
+            tgInput.required = false;
+        }
+    }
+
+    tgRadio.addEventListener('change', toggleTg);
+    emailRadio.addEventListener('change', toggleTg);
+    toggleTg(); // при загрузке
+
+    // Логика переключения способов доставки
+    document.querySelectorAll('input[name="delivery_type"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+            const mapBlock = document.getElementById('map-block');
+            const addrFields = document.getElementById('address-fields');
+
+            if (radio.value === 'post') {
+                mapBlock.style.display = 'block';
+                addrFields.style.display = 'none';
+                initMap();
+            } else {
+                mapBlock.style.display = 'none';
+                addrFields.style.display = 'block';
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

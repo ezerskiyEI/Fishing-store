@@ -1,6 +1,7 @@
 import os
 import random
 import datetime
+import requests
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
@@ -8,6 +9,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_mail import Mail, Message
+from sqlalchemy import text
 
 app = Flask(__name__)
 
@@ -23,9 +25,11 @@ app.config.update(dict(
     MAIL_PORT=587,
     MAIL_USE_TLS=True,
     MAIL_USERNAME='beztele153@gmail.com',
-    MAIL_PASSWORD='odax zbtq wwko veoa', 
-    MAIL_DEFAULT_SENDER='beztele153@gmail.com'
+    MAIL_PASSWORD='odax zbtq wwko veoa',
+    MAIL_DEFAULT_SENDER=('Fishing Shop', 'beztele153@gmail.com')
 ))
+
+TELEGRAM_BOT_TOKEN = '8478250303:AAGO88C82UCxrZ8dJjJEDogbL6hKjPy4Izs'
 
 db = SQLAlchemy(app)
 mail = Mail(app)
@@ -41,6 +45,7 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(255))
     avatar = db.Column(db.String(255), default='default.png')
     is_admin = db.Column(db.Boolean, default=False)
+    tg_id = db.Column(db.String(50))
 
 class Product(db.Model):
     __tablename__ = 'products'
@@ -66,6 +71,8 @@ class Order(db.Model):
     total_price = db.Column(db.Float)
     delivery_address = db.Column(db.String(255))
     status = db.Column(db.String(50), default='В обработке')
+    notification_method = db.Column(db.String(20))
+    tg_contact = db.Column(db.String(100))
 
 class OrderItem(db.Model):
     __tablename__ = 'order_items'
@@ -73,13 +80,43 @@ class OrderItem(db.Model):
     order_id = db.Column(db.Integer, db.ForeignKey('orders.id', ondelete='CASCADE'))
     product_id = db.Column(db.Integer, db.ForeignKey('products.id', ondelete='SET NULL'))
     quantity = db.Column(db.Integer)
-    price = db.Column(db.Float)
+    price_at_purchase = db.Column(db.Float)   # именно price, не price_at_purchase
 
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
-# ====================== КОРЗИНА ======================
+# ====================== МИГРАЦИИ ======================
+with app.app_context():
+    db.create_all()
+    try:
+        # Добавление колонок в orders
+        db.session.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;"))
+        db.session.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_address VARCHAR(255);"))
+        db.session.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS notification_method VARCHAR(20);"))
+        db.session.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS tg_contact VARCHAR(100);"))
+        
+        # Добавление колонки в users
+        db.session.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS tg_id VARCHAR(50);"))
+        
+        # Добавление колонки price в order_items
+        db.session.execute(text("ALTER TABLE order_items ADD COLUMN IF NOT EXISTS price FLOAT;"))
+        
+        db.session.commit()
+        print("✅ Все недостающие колонки добавлены!")
+    except Exception as e:
+        print("Миграция уже была или ошибка:", e)
+
+# ====================== УТИЛИТЫ ======================
+def send_telegram_notification(chat_id, message):
+    if not chat_id:
+        return
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    try:
+        requests.post(url, json={'chat_id': chat_id, 'text': message})
+    except:
+        pass
+
 def get_clean_cart():
     if 'cart' not in session or not isinstance(session['cart'], list):
         session['cart'] = []
@@ -115,6 +152,13 @@ def admin_required(f):
 def index():
     return render_template('index.html')
 
+@app.route('/promotions')
+def promotions(): return render_template('promotions.html')
+@app.route('/about')
+def about(): return render_template('about.html')
+@app.route('/delivery')
+def delivery(): return render_template('delivery.html')
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -138,7 +182,6 @@ def register():
         if User.query.filter_by(email=email).first():
             flash('Email занят!', 'danger')
             return redirect(url_for('register'))
-
         otp = str(random.randint(100000, 999999))
         session['temp_user'] = {
             'username': request.form.get('username'),
@@ -185,7 +228,6 @@ def product_detail(id):
     product = db.session.get(Product, id)
     return render_template('product_detail.html', product=product)
 
-# --- КОРЗИНА ---
 @app.route('/cart')
 def cart():
     cart_session = get_clean_cart()
@@ -234,30 +276,86 @@ def remove_from_cart(id):
     session.modified = True
     return redirect(url_for('cart'))
 
-@app.route('/checkout', methods=['POST'])
+@app.route('/checkout', methods=['GET', 'POST'])
 @login_required
 def checkout():
-    delivery_type = request.form.get('delivery_type')
-    city = request.form.get('city', 'Витебск')
-    address = request.form.get('address')
-    selected_post_name = request.form.get('selected_post_name')
-    selected_post_address = request.form.get('selected_post_address')
+    cart_session = get_clean_cart()
+    if not cart_session:
+        return redirect(url_for('catalog'))
 
-    if delivery_type == 'post':
-        if not selected_post_name:
-            flash('❌ Выберите пункт выдачи на карте!', 'danger')
-            return redirect(url_for('cart'))
-        delivery_info = f"{selected_post_name} ({selected_post_address})"
-    elif delivery_type == 'courier':
-        delivery_info = f"Курьер: {city}, {address}"
-    else:
-        delivery_info = f"Самовывоз в {city}"
+    total = sum(db.session.get(Product, item['id']).price * item.get('quantity', 1) for item in cart_session)
 
-    session.pop('cart', None)
-    flash(f'✅ Заказ успешно оформлен! Доставка: {delivery_info}', 'success')
-    return redirect(url_for('profile'))
+    if request.method == 'POST':
+        # Доставка
+        delivery_type = request.form.get('delivery_type')
+        city = request.form.get('city', 'Минск')
+        address = request.form.get('address', '')
+        selected_post_name = request.form.get('selected_post_name', '')
+        selected_post_address = request.form.get('selected_post_address', '')
 
-# --- АДМИНКА ---
+        if delivery_type == 'post':
+            delivery_info = f"{selected_post_name} ({selected_post_address})"
+        elif delivery_type == 'courier':
+            delivery_info = f"Курьер: {city}, {address}"
+        else:  # pickup
+            delivery_info = f"Самовывоз ({city})"
+
+        # Способ уведомления
+        method = request.form.get('notification_method', 'email')
+        tg_contact = request.form.get('tg_contact') if method == 'telegram' else None
+
+        # Если выбран Telegram и введён ID, сохраняем его в профиль (если он изменился)
+        if method == 'telegram' and tg_contact and tg_contact != current_user.tg_id:
+            current_user.tg_id = tg_contact
+            db.session.commit()
+
+        # Создаём заказ
+        new_order = Order(
+            user_id=current_user.id,
+            total_price=total,
+            delivery_address=delivery_info,
+            notification_method=method,
+            tg_contact=tg_contact
+        )
+        db.session.add(new_order)
+        db.session.commit()
+
+        # Сохраняем товары заказа (опционально)
+        for item in cart_session:
+            product = db.session.get(Product, item['id'])
+            if product:
+                order_item = OrderItem(
+                    order_id=new_order.id,
+                    product_id=product.id,
+                    quantity=item['quantity'],
+                    price_at_purchase=product.price   # используем точное имя колонки
+                )
+                db.session.add(order_item)
+        db.session.commit()
+
+        # Формируем текст уведомления
+        msg_text = f"✅ Заказ #{new_order.id} успешно оформлен!\nСумма: {total} ₽\nДоставка: {delivery_info}"
+
+        # Отправляем уведомление
+        if method == 'telegram' and tg_contact:
+            send_telegram_notification(tg_contact, msg_text)
+        else:
+            try:
+                msg = Message(
+                    subject=f'Заказ #{new_order.id} — Fishing Shop',
+                    recipients=[current_user.email],
+                    body=msg_text
+                )
+                mail.send(msg)
+            except Exception as e:
+                flash(f'Не удалось отправить письмо: {e}', 'warning')
+
+        session.pop('cart', None)
+        flash('✅ Заказ оформлен! Уведомление отправлено.', 'success')
+        return redirect(url_for('profile'))
+
+    return render_template('checkout.html', total=total)
+
 @app.route('/admin', methods=['GET', 'POST'])
 @admin_required
 def admin_panel():
@@ -292,32 +390,72 @@ def admin_delete(id):
         db.session.commit()
     return redirect(url_for('admin_panel'))
 
-@app.route('/admin/orders')
+@app.route('/admin/orders', methods=['GET', 'POST'])
 @admin_required
 def admin_orders():
-    filter_type = request.args.get('filter', 'active')  # по умолчанию активные
+    filter_type = request.args.get('filter', 'active')
     
+    if request.method == 'POST':
+        order_id = request.form.get('order_id')
+        new_status = request.form.get('status')
+        order = db.session.get(Order, int(order_id))
+        if order:
+            old_status = order.status
+            order.status = new_status
+            db.session.commit()
+
+            # Уведомление при изменении статуса
+            if new_status != old_status and new_status in ['В пути', 'Отправлен', 'Доставлен']:
+                msg_text = f"📦 Ваш заказ #{order.id} теперь в статусе: {new_status}"
+
+                if order.notification_method == 'telegram' and order.tg_contact:
+                    send_telegram_notification(order.tg_contact, msg_text)
+                else:
+                    try:
+                        user = User.query.get(order.user_id)
+                        if user:
+                            msg = Message(
+                                subject=f'Обновление заказа #{order.id} — Fishing Shop',
+                                recipients=[user.email],
+                                body=msg_text
+                            )
+                            mail.send(msg)
+                    except:
+                        pass
+
     query = Order.query.order_by(Order.created_at.desc())
-    
     if filter_type == 'active':
         query = query.filter(Order.status.notin_(['Доставлен', 'Отменён']))
     elif filter_type == 'completed':
         query = query.filter(Order.status.in_(['Доставлен', 'Отменён']))
     
     orders = query.all()
-    return render_template('admin_orders.html', orders=orders, filter_type=filter_type)
+    return render_template('admin_orders.html', orders=orders, filter_type=filter_type, User=User)
 
-@app.route('/promotions')
-def promotions(): return render_template('promotions.html')
-@app.route('/about')
-def about(): return render_template('about.html')
-@app.route('/delivery')
-def delivery(): return render_template('delivery.html')
-@app.route('/profile')
+@app.route('/profile', methods=['GET', 'POST'])
 @login_required
-def profile(): return render_template('profile.html')
+def profile():
+    if request.method == 'POST':
+        file = request.files.get('avatar')
+        if file and file.filename:
+            filename = secure_filename(f"user_{current_user.id}_{file.filename}")
+            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            current_user.avatar = filename
+            db.session.commit()
+            flash('Аватар обновлён!', 'success')
+    orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.created_at.desc()).all()
+    return render_template('profile.html', orders=orders)
+
+@app.route('/admin/order/delete/<int:id>')
+@admin_required
+def admin_order_delete(id):
+    order = db.session.get(Order, id)
+    if order:
+        db.session.delete(order)
+        db.session.commit()
+        flash(f'Заказ #{id} успешно удалён!', 'success')
+    return redirect(url_for('admin_orders'))
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)

@@ -1,113 +1,134 @@
 {% extends "base.html" %}
-{% block title %}Панель администратора{% endblock %}
+{% block title %}Панель администратора — Fishing Shop{% endblock %}
 
 {% block body %}
-<div class="row">
-    <div class="col-md-4">
-        <div class="card shadow-sm border-0 p-4 sticky-top" style="top: 90px; z-index: 100;">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4 class="fw-bold m-0" id="formTitle">🛠 Управление</h4>
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="resetBtn" style="display: none;" onclick="resetForm()">
-                    <i class="bi bi-x-lg"></i> Сброс
-                </button>
-            </div>
-
-            <form action="{{ url_for('admin_panel') }}" method="POST" enctype="multipart/form-data" id="pForm">
-                <input type="hidden" name="product_id" id="p_id">
-
-                <div class="mb-3">
-                    <label class="small fw-bold form-label">Название товара</label>
-                    <input type="text" name="name" id="p_name" class="form-control" placeholder="Напр: Спиннинг Shimano" required>
-                </div>
-
-                <div class="mb-3">
-                    <label class="small fw-bold form-label">Цена (₽)</label>
-                    <input type="number" name="price" id="p_price" class="form-control" placeholder="0" required>
-                </div>
-
-                <div class="mb-3">
-                    <label class="small fw-bold form-label">Категория</label>
-                    <select name="category" id="p_cat" class="form-select" required>
-                        <!-- Группировка категорий из каталога -->
-                        <optgroup label="Катушки">
-                            <option value="Безынерционные">Безынерционные</option>
-                            <option value="Мультипликаторные">Мультипликаторные</option>
-                            <option value="Катушки зимние">Катушки зимние</option>
-                        </optgroup>
-                        <optgroup label="Удилища">
-                            <option value="Спиннинговые удилища">Спиннинговые удилища</option>
-                            <option value="Фидерные удилища">Фидерные удилища</option>
-                            <option value="Удочки зимние">Удочки зимние</option>
-                        </optgroup>
-                        <optgroup label="Приманки">
-                            <option value="Балансиры">Балансиры</option>
-                            <option value="Блесны зимние">Блесны зимние</option>
-                            <option value="Мормышки">Мормышки</option>
-                        </optgroup>
-                        <optgroup label="Аксессуары">
-                            <option value="Аксессуары зимние">Аксессуары зимние</option>
-                            <option value="Лески зимние">Лески зимние</option>
-                            <option value="Санки, коробы, ящики">Санки, коробы, ящики</option>
-                            <option value="Ледобуры">Ледобуры</option>
-                        </optgroup>
-                        <optgroup label="Палатки">
-                            <option value="Палатки и Выды">Палатки и Выды</option>
-                            <option value="Платки зимние">Платки зимние</option>
-                        </optgroup>
-                        <!-- Добавь больше групп из твоего каталога -->
-                        <option value="Другое">Другое</option>
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label class="small fw-bold form-label">Описание</label>
-                    <textarea name="description" id="p_desc" class="form-control" rows="4" placeholder="Подробное описание товара..."></textarea>
-                </div>
-
-                <div class="mb-3">
-                    <label class="small fw-bold form-label">Фотография</label>
-                    <input type="file" name="image" class="form-control" accept="image/*">
-                    <div id="imageNotice" class="form-text text-info" style="display: none;">
-                        Оставьте пустым, если не хотите менять текущее фото.
-                    </div>
-                </div>
-
-                <button type="submit" id="sBtn" class="btn btn-warning w-100 fw-bold py-2 shadow-sm">
-                    <i class="bi bi-plus-circle me-1"></i> Сохранить товар
-                </button>
-            </form>
-        </div>
+<div class="container py-5">
+    <!-- Заголовок + кнопка Все заказы -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="fw-bold">🛠 Панель администратора</h1>
+        <a href="{{ url_for('admin_orders') }}" class="btn btn-danger btn-lg shadow-sm">
+            📦 Просмотреть все заказы
+        </a>
     </div>
 
-    <div class="col-md-8">
-        <div class="card shadow-sm border-0 p-4">
-            <h4 class="fw-bold mb-3">📦 Товары на складе</h4>
-            <!-- Таблица товаров (твоя оригинальная, если есть, или добавь) -->
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Фото</th>
-                        <th>Название</th>
-                        <th>Цена</th>
-                        <th>Категория</th>
-                        <th>Действия</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for p in products %}
-                    <tr>
-                        <td><img src="{{ url_for('static', filename='uploads/' + p.image) }}" width="50"></td>
-                        <td>{{ p.name }}</td>
-                        <td>{{ p.price }} ₽</td>
-                        <td>{{ p.category }}</td>
-                        <td>
-                            <button onclick="editP(this)" data-id="{{ p.id }}" data-name="{{ p.name }}" data-price="{{ p.price }}" data-cat="{{ p.category }}" data-desc="{{ p.description }}">⚙️</button>
-                            <a href="{{ url_for('admin_delete', id=p.id) }}" onclick="return confirm('Удалить?')">🗑</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="row">
+        <!-- Форма добавления/редактирования товара -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 p-4 sticky-top" style="top: 90px; z-index: 100;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="fw-bold m-0" id="formTitle">🛠 Управление товаром</h4>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="resetBtn" style="display: none;" onclick="resetForm()">
+                        <i class="bi bi-x-lg"></i> Сброс
+                    </button>
+                </div>
+
+                <form action="{{ url_for('admin_panel') }}" method="POST" enctype="multipart/form-data" id="pForm">
+                    <input type="hidden" name="product_id" id="p_id">
+
+                    <div class="mb-3">
+                        <label class="small fw-bold form-label">Название товара</label>
+                        <input type="text" name="name" id="p_name" class="form-control" placeholder="Напр: Спиннинг Shimano" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="small fw-bold form-label">Цена (₽)</label>
+                        <input type="number" name="price" id="p_price" class="form-control" placeholder="0" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="small fw-bold form-label">Категория</label>
+                        <select name="category" id="p_cat" class="form-select" required>
+                            <optgroup label="Катушки">
+                                <option value="Катушки безинерционные">Катушки безинерционные</option>
+                                <option value="Катушки зимние">Катушки зимние</option>
+                                <option value="Катушки мультипликаторные">Катушки мультипликаторные</option>
+                            </optgroup>
+                            <optgroup label="Удилища">
+                                <option value="Спиннинговые удилища">Спиннинговые удилища</option>
+                                <option value="Фидерные удилища">Фидерные удилища</option>
+                                <option value="Удочки зимние">Удочки зимние</option>
+                            </optgroup>
+                            <optgroup label="Приманки">
+                                <option value="Балансиры">Балансиры</option>
+                                <option value="Блесны зимние">Блесны зимние</option>
+                                <option value="Мормышки">Мормышки</option>
+                            </optgroup>
+                            <optgroup label="Аксессуары">
+                                <option value="Аксессуары зимние">Аксессуары зимние</option>
+                                <option value="Ледобуры">Ледобуры</option>
+                                <option value="Палатки и Выды">Палатки и Выды</option>
+                            </optgroup>
+                            <option value="Другое">Другое</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="small fw-bold form-label">Описание</label>
+                        <textarea name="description" id="p_desc" class="form-control" rows="4" placeholder="Подробное описание..."></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="small fw-bold form-label">Фотография</label>
+                        <input type="file" name="image" class="form-control" accept="image/*">
+                        <div id="imageNotice" class="form-text text-info" style="display: none;">
+                            Оставьте пустым, если не хотите менять фото
+                        </div>
+                    </div>
+
+                    <button type="submit" id="sBtn" class="btn btn-warning w-100 fw-bold py-2 shadow-sm">
+                        <i class="bi bi-plus-circle me-1"></i> Сохранить товар
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Таблица товаров -->
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 p-4">
+                <h4 class="fw-bold mb-3">📦 Товары на складе</h4>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Фото</th>
+                                <th>Название</th>
+                                <th>Цена</th>
+                                <th>Категория</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in products %}
+                            <tr>
+                                <td>
+                                    <img src="{{ url_for('static', filename='uploads/' + p.image) }}" 
+                                         width="60" class="rounded" alt="{{ p.name }}">
+                                </td>
+                                <td><strong>{{ p.name }}</strong></td>
+                                <td class="text-danger fw-bold">{{ p.price|round(0) }} ₽</td>
+                                <td>{{ p.category }}</td>
+                                <td>
+                                    <button onclick="editP(this)" 
+                                            class="btn btn-sm btn-outline-primary me-2"
+                                            data-id="{{ p.id }}"
+                                            data-name="{{ p.name }}"
+                                            data-price="{{ p.price }}"
+                                            data-cat="{{ p.category }}"
+                                            data-desc="{{ p.description }}">
+                                        ⚙️ Редактировать
+                                    </button>
+                                    <a href="{{ url_for('admin_delete', id=p.id) }}" 
+                                       class="btn btn-sm btn-outline-danger"
+                                       onclick="return confirm('Удалить товар?')">
+                                        🗑 Удалить
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -120,8 +141,8 @@ function editP(btn) {
     document.getElementById('p_cat').value = btn.dataset.cat;
     document.getElementById('p_desc').value = btn.dataset.desc;
 
-    document.getElementById('formTitle').textContent = "⚙️ Правка";
-    document.getElementById('sBtn').textContent = "Обновить товар";
+    document.getElementById('formTitle').textContent = "⚙️ Редактирование товара";
+    document.getElementById('sBtn').innerHTML = `<i class="bi bi-save me-1"></i> Обновить товар`;
     document.getElementById('sBtn').classList.replace('btn-warning', 'btn-primary');
     document.getElementById('resetBtn').style.display = "block";
     document.getElementById('imageNotice').style.display = "block";
@@ -130,8 +151,8 @@ function editP(btn) {
 function resetForm() {
     document.getElementById('pForm').reset();
     document.getElementById('p_id').value = "";
-    document.getElementById('formTitle').textContent = "🛠 Управление";
-    document.getElementById('sBtn').textContent = "Сохранить товар";
+    document.getElementById('formTitle').textContent = "🛠 Управление товаром";
+    document.getElementById('sBtn').innerHTML = `<i class="bi bi-plus-circle me-1"></i> Сохранить товар`;
     document.getElementById('sBtn').classList.replace('btn-primary', 'btn-warning');
     document.getElementById('resetBtn').style.display = "none";
     document.getElementById('imageNotice').style.display = "none";
