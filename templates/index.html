@@ -2,74 +2,151 @@
 {% block title %}Главная - Fishing Shop{% endblock %}
 
 {% block body %}
-<div class="position-relative rounded-4 overflow-hidden mb-5 text-white" style="height: 500px; background: #000;">
+
+<!-- 🔥 Бегающая строка акций -->
+<div class="bg-warning text-dark py-2 overflow-hidden position-relative">
+    <div class="marquee fw-bold">
+        🎣 -15% на спиннинги | 🚚 Бесплатная доставка от 5000₽ | 🐟 Новая коллекция воблеров 2026 | 🔥 Скидки на катушки Shimano и Daiwa
+    </div>
+</div>
+
+<style>
+.marquee {
+    display: inline-block;
+    white-space: nowrap;
+    animation: marquee 18s linear infinite;
+}
+@keyframes marquee {
+    from { transform: translateX(100%); }
+    to { transform: translateX(-100%); }
+}
+.hero-overlay {
+    background: linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0.2));
+}
+.hover-card {
+    transition: 0.3s ease;
+}
+.hover-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+}
+.calendar-day {
+    transition: 0.2s ease;
+}
+.calendar-day:hover {
+    transform: scale(1.05);
+}
+</style>
+
+<!-- 🌊 Hero -->
+<div class="position-relative rounded-4 overflow-hidden mb-5 text-white shadow-lg" style="height: 550px;">
     <img src="{{ url_for('static', filename='fishing_dg.jpg') }}" 
-         style="width: 100%; height: 100%; object-fit: cover; opacity: 0.6;" alt="Fishing Background">
+         style="width: 100%; height: 100%; object-fit: cover;" alt="Fishing Background">
     
+    <div class="position-absolute top-0 start-0 w-100 h-100 hero-overlay"></div>
+
     <div class="position-absolute top-50 start-50 translate-middle text-center w-100 px-3">
-        <h1 class="display-3 fw-bold mb-3">Сезон больших трофеев</h1>
+        <h1 class="display-2 fw-bold mb-3">Сезон больших трофеев</h1>
         <p class="lead mb-4">Профессиональные снасти, проверенные временем и опытом.</p>
-        <div class="d-flex justify-content-center gap-3">
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
             <a href="{{ url_for('catalog') }}" class="btn btn-warning btn-lg fw-bold px-5 rounded-pill shadow">В каталог</a>
             <a href="{{ url_for('promotions') }}" class="btn btn-outline-light btn-lg fw-bold px-5 rounded-pill">Акции</a>
         </div>
     </div>
 </div>
 
-<div class="row g-4 mb-5 text-center">
-    <div class="col-md-4">
-        <div class="p-4 bg-white rounded shadow-sm h-100 border-bottom border-warning border-4">
-            <i class="bi bi-truck fs-1 text-warning mb-3"></i>
-            <h4>Быстрая доставка</h4>
-            <p class="text-muted small">Отправляем в день заказа по всей стране.</p>
+<!-- 📅 Прогноз + ДИНАМИЧЕСКИЙ КАЛЕНДАРЬ -->
+<div class="row mb-5 g-4">
+
+    <!-- Прогноз -->
+    <div class="col-lg-6">
+        <h2 class="fw-bold mb-3">📅 Прогноз клёва</h2>
+
+        <div class="list-group shadow-sm rounded-4 overflow-hidden">
+            <div class="list-group-item d-flex justify-content-between">
+                <span>Щука (Спиннинг)</span>
+                <span class="badge bg-success">Отличный</span>
+            </div>
+            <div class="list-group-item d-flex justify-content-between">
+                <span>Окунь (Мормышка)</span>
+                <span class="badge bg-warning text-dark">Средний</span>
+            </div>
+            <div class="list-group-item d-flex justify-content-between">
+                <span>Судак (Джиг)</span>
+                <span class="badge bg-danger">Слабый</span>
+            </div>
+        </div>
+
+        <a href="{{ url_for('catalog') }}" class="btn btn-outline-dark mt-4 rounded-pill">
+            Подобрать снасти
+        </a>
+    </div>
+
+    <!-- 🗓 ДИНАМИЧЕСКИЙ КАЛЕНДАРЬ -->
+    <div class="col-lg-6">
+        <h2 class="fw-bold mb-3">🗓 Календарь рыболова</h2>
+
+        <!-- Выбор даты -->
+        <form method="get" class="mb-3">
+            <input type="date" name="date" value="{{ selected_date }}" 
+                   class="form-control rounded-pill shadow-sm">
+        </form>
+
+        <div class="row g-2">
+            {% for day in calendar %}
+            <div class="col-4 col-md-3">
+                <div class="card calendar-day shadow-sm border-0 text-center p-2">
+                    <small class="fw-bold">{{ day.date }}</small>
+                    <div class="small text-muted">🌙 {{ day.phase }}</div>
+                    <span class="badge bg-{{ day.color }} mt-1">
+                        {{ day.rating }}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="p-4 bg-white rounded shadow-sm h-100 border-bottom border-success border-4">
-            <i class="bi bi-shield-check fs-1 text-success mb-3"></i>
-            <h4>Гарантия качества</h4>
-            <p class="text-muted small">Только оригинальные бренды Shimano, Daiwa.</p>
+
+</div>
+
+<!-- 📰 Новости мира рыбалки -->
+<div class="mb-5">
+    <h2 class="fw-bold mb-4 text-center">📰 Новости мира рыбалки</h2>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-4 hover-card">
+                <div class="card-body">
+                    <h5>Новая серия катушек от Shimano</h5>
+                    <p class="text-muted small">
+                        Японский бренд представил обновлённую линейку лёгких карбоновых катушек.
+                    </p>
+                    <a href="#" class="btn btn-sm btn-outline-warning">Читать</a>
+                </div>
+            </div>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="p-4 bg-white rounded shadow-sm h-100 border-bottom border-primary border-4">
-            <i class="bi bi-chat-heart fs-1 text-primary mb-3"></i>
-            <h4>Помощь экспертов</h4>
-            <p class="text-muted small">Консультируют чемпионы по рыбной ловле.</p>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-4 hover-card">
+                <div class="card-body">
+                    <h5>Daiwa выпустила инновационные воблеры</h5>
+                    <p class="text-muted small">
+                        Улучшенная аэродинамика и новая система балансировки.
+                    </p>
+                    <a href="#" class="btn btn-sm btn-outline-warning">Читать</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-4 hover-card">
+                <div class="card-body">
+                    <h5>Чемпионат по спиннингу 2026</h5>
+                    <p class="text-muted small">
+                        Определены даты главного турнира сезона.
+                    </p>
+                    <a href="#" class="btn btn-sm btn-outline-warning">Подробнее</a>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="row align-items-center mb-5">
-    <div class="col-lg-6 mb-4 mb-lg-0">
-        <h2 class="fw-bold mb-3">📅 Прогноз клёва на неделю</h2>
-        <p class="text-muted mb-4">Мы анализируем погоду и фазы луны, чтобы вы не тратили время зря.</p>
-        
-        <div class="list-group shadow-sm">
-            <div class="list-group-item d-flex justify-content-between align-items-center">
-                <div><span class="fw-bold">Щука</span> <small class="text-muted ms-2">Спиннинг</small></div>
-                <span class="badge bg-success rounded-pill">Отличный клёв</span>
-            </div>
-            <div class="list-group-item d-flex justify-content-between align-items-center">
-                <div><span class="fw-bold">Окунь</span> <small class="text-muted ms-2">Мормышка</small></div>
-                <span class="badge bg-warning text-dark rounded-pill">Средний</span>
-            </div>
-            <div class="list-group-item d-flex justify-content-between align-items-center">
-                <div><span class="fw-bold">Судак</span> <small class="text-muted ms-2">Джиг</small></div>
-                <span class="badge bg-danger rounded-pill">Слабый</span>
-            </div>
-        </div>
-        <a href="{{ url_for('catalog') }}" class="btn btn-outline-dark mt-4">Подобрать снасти под клёв</a>
-    </div>
-    
-    <div class="col-lg-6">
-        <div class="card border-0 shadow bg-dark text-white overflow-hidden">
-            <img src="{{ url_for('static', filename='summer.jpg') }}" class="card-img opacity-50" style="height: 300px; object-fit: cover;">
-            <div class="card-img-overlay d-flex flex-column justify-content-end">
-                <h3 class="fw-bold">Готовимся к летнему сезону!</h3>
-                <p>Поступление новых воблеров и катушек.</p>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}

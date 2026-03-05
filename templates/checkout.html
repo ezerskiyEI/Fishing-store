@@ -35,9 +35,9 @@
             <h5 class="mb-3">Выберите пункт выдачи</h5>
 
             <div class="btn-group mb-3">
-                <button type="button" class="btn btn-outline-primary" onclick="showType('all')">Все</button>
-                <button type="button" class="btn btn-outline-danger" onclick="showType('Европочта')">Европочта</button>
-                <button type="button" class="btn btn-outline-info" onclick="showType('Белпочта')">Белпочта</button>
+                <button type="button" class="btn btn-outline-primary" onclick="window.filterPoints('all')">Все</button>
+                <button type="button" class="btn btn-outline-danger" onclick="window.filterPoints('Европочта')">Европочта</button>
+                <button type="button" class="btn btn-outline-info" onclick="window.filterPoints('Белпочта')">Белпочта</button>
             </div>
 
             <div id="yandex-map" style="width:100%; height:620px; border:2px solid #0d6efd; border-radius:12px;"></div>
@@ -50,7 +50,7 @@
             </div>
         </div>
 
-        <!-- ВЫБОР СПОСОБА УВЕДОМЛЕНИЯ (НОВЫЙ БЛОК) -->
+        <!-- ВЫБОР СПОСОБА УВЕДОМЛЕНИЯ -->
         <hr class="my-5">
         <h5 class="mb-3">Куда отправить чек и трек-код?</h5>
         <div class="mb-4">
@@ -88,95 +88,125 @@
     </form>
 </div>
 
-<!-- Подключение Yandex Maps и скрипты -->
+<!-- Yandex Maps API -->
 <script src="https://api-maps.yandex.ru/2.1/?apikey=ВАШ_КЛЮЧ&lang=ru_RU" type="text/javascript"></script>
 
 <script>
-// ==============================================
-// ТОЧКИ БЕРУТСЯ ИЗ ФАЙЛА post_points.json
-// ==============================================
-let allPoints = [];
-
 // ==============================================
 // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
 // ==============================================
 let map = null;
 let clusterer = null;
+let allPoints = [];            // сюда загрузим точки из JSON
 let currentFilter = 'all';
+let mapInitialized = false;     // флаг, чтобы не создавать карту повторно
 
 // ==============================================
 // ЗАГРУЗКА ТОЧЕК ИЗ JSON
 // ==============================================
-async function loadPoints() {
+async function loadPointsFromJson() {
     try {
-        const response = await fetch("{{ url_for('static', filename='data/post_points.json') }}");
+        const response = await fetch('/static/data/post_points.json');
+        if (!response.ok) throw new Error('Ошибка загрузки JSON');
         allPoints = await response.json();
-        showPoints(currentFilter);
+        console.log('Точки загружены:', allPoints.length);
+        return allPoints;
     } catch (e) {
-        console.error("Ошибка загрузки post_points.json", e);
+        console.error('Не удалось загрузить post_points.json', e);
+        return [];
     }
 }
 
 // ==============================================
-// ИНИЦИАЛИЗАЦИЯ КАРТЫ
+// ИНИЦИАЛИЗАЦИЯ КАРТЫ (только один раз)
 // ==============================================
 function initMap() {
-    if (map) return;
+    return new Promise((resolve) => {
+        if (mapInitialized) {
+            resolve();
+            return;
+        }
+        ymaps.ready(() => {
+            map = new ymaps.Map('yandex-map', {
+                center: [53.90, 27.56],
+                zoom: 7,
+                controls: ['zoomControl', 'searchControl', 'fullscreenControl']
+            });
 
-    ymaps.ready(() => {
-        map = new ymaps.Map('yandex-map', {
-            center: [53.90, 27.56],
-            zoom: 7,
-            controls: ['zoomControl', 'searchControl', 'fullscreenControl']
+            clusterer = new ymaps.Clusterer({
+                preset: 'islands#invertedVioletClusterIcons',
+                groupByCoordinates: false,
+                clusterDisableClickZoom: false,
+                clusterZoomRange: [0, 19],
+                clusterBalloonContentLayout: 'cluster#balloonCarousel',
+                clusterBalloonPagerSize: 5,
+                clusterBalloonContentLayoutWidth: 320,
+                clusterBalloonContentLayoutHeight: 220,
+                geoObjectHideIconOnBalloonOpen: false
+            });
+
+            map.geoObjects.add(clusterer);
+            mapInitialized = true;
+            resolve();
         });
-
-        clusterer = new ymaps.Clusterer({
-            preset: 'islands#invertedVioletClusterIcons',
-            groupByCoordinates: false,
-            clusterDisableClickZoom: false,
-            clusterZoomRange: [0, 19],
-            clusterBalloonContentLayout: 'cluster#balloonCarousel',
-            clusterBalloonPagerSize: 5,
-            clusterBalloonContentLayoutWidth: 320,
-            clusterBalloonContentLayoutHeight: 220,
-            clusterHideIconOnBalloonOpen: false,
-            geoObjectHideIconOnBalloonOpen: false
-        });
-
-        map.geoObjects.add(clusterer);
-        loadPoints();
     });
 }
 
 // ==============================================
-// ПОКАЗ ТОЧЕК С ФИЛЬТРОМ
+// ОТОБРАЖЕНИЕ ТОЧЕК С ФИЛЬТРОМ
 // ==============================================
-function showPoints(filter) {
-    if (!clusterer) return;
+function renderPoints(filter) {
+    if (!clusterer || allPoints.length === 0) return;
 
     clusterer.removeAll();
 
     const placemarks = allPoints
         .filter(p => filter === 'all' || p.type === filter)
         .map(p => {
-            return new ymaps.Placemark(p.coords, {
+            const placemark = new ymaps.Placemark(p.coords, {
                 hintContent: p.addr,
                 balloonContentHeader: `<b>${p.type}</b>`,
                 balloonContentBody: `
                     <div style="font-size:14px; margin:10px 0;">
                         <strong>${p.addr}</strong>
                     </div>
-                    <button class="btn btn-primary btn-sm w-100"
-                            onclick="selectPoint('${p.type.replace(/'/g,"\\'")}', '${p.addr.replace(/'/g,"\\'")}')">
+                    <button class="btn btn-primary btn-sm w-100 select-point-btn"
+                            data-type="${p.type}"
+                            data-addr="${p.addr.replace(/"/g, '&quot;')}">
                         ✅ Выбрать этот пункт
                     </button>
                 `
             }, {
                 preset: p.type === 'Европочта' ? 'islands#redIcon' : 'islands#blueIcon'
             });
+
+            // Добавляем обработчик выбора при открытии балуна
+            placemark.events.add('balloonopen', () => {
+                setTimeout(() => {
+                    document.querySelectorAll('.select-point-btn').forEach(btn => {
+                        btn.removeEventListener('click', balloonSelectHandler);
+                        btn.addEventListener('click', balloonSelectHandler);
+                    });
+                }, 100);
+            });
+
+            return placemark;
         });
 
     clusterer.add(placemarks);
+}
+
+// Обработчик кнопки выбора в балуне
+function balloonSelectHandler(e) {
+    e.preventDefault();
+    const btn = e.currentTarget;
+    const type = btn.dataset.type;
+    const addr = btn.dataset.addr;
+    selectPoint(type, addr);
+    // Закрыть балун
+    if (map.balloon.isOpen()) {
+        map.balloon.close();
+    }
 }
 
 // ==============================================
@@ -185,58 +215,112 @@ function showPoints(filter) {
 function selectPoint(type, addr) {
     document.getElementById('selected_post_name').value = `${type} — ${addr}`;
     document.getElementById('selected_post_address').value = addr;
-    document.getElementById('selected-text').textContent = `${type} — ${addr}`;
+    document.getElementById('selected-text').innerText = `${type} — ${addr}`;
     document.getElementById('selected-info').classList.remove('d-none');
     document.getElementById('selected-info').scrollIntoView({ behavior: 'smooth' });
 }
 
 // ==============================================
-// ФИЛЬТРЫ
+// ФИЛЬТРАЦИЯ (доступна глобально)
 // ==============================================
-function showType(filter) {
+window.filterPoints = function(filter) {
     currentFilter = filter;
-    showPoints(filter);
+    renderPoints(filter);
+};
+
+// ==============================================
+// АКТИВАЦИЯ РЕЖИМА "ПОЧТА"
+// ==============================================
+async function enablePostMode() {
+    const mapBlock = document.getElementById('map-block');
+    const addrFields = document.getElementById('address-fields');
+
+    mapBlock.style.display = 'block';
+    addrFields.style.display = 'none';
+
+    // Отключаем обязательность полей city/address
+    document.querySelector('input[name="city"]').required = false;
+    document.querySelector('input[name="address"]').required = false;
+
+    await initMap();                 // создаём карту, если ещё нет
+    if (allPoints.length === 0) {    // загружаем точки, если ещё не загружены
+        await loadPointsFromJson();
+    }
+    renderPoints(currentFilter);      // показываем
 }
 
 // ==============================================
-// ПЕРЕКЛЮЧЕНИЕ БЛОКОВ ДОСТАВКИ
+// АКТИВАЦИЯ РЕЖИМОВ "САМОВЫВОЗ" / "КУРЬЕР"
 // ==============================================
-document.addEventListener('DOMContentLoaded', () => {
-    const tgRadio = document.getElementById('telegram');
-    const emailRadio = document.getElementById('email');
-    const tgField = document.getElementById('tg-field');
-    const tgInput = tgField.querySelector('input');
+function enablePickupOrCourierMode() {
+    const mapBlock = document.getElementById('map-block');
+    const addrFields = document.getElementById('address-fields');
 
-    function toggleTg() {
-        if (tgRadio.checked) {
-            tgField.classList.remove('d-none');
-            tgInput.required = true;
-        } else {
-            tgField.classList.add('d-none');
-            tgInput.required = false;
+    mapBlock.style.display = 'none';
+    addrFields.style.display = 'block';
+
+    document.querySelector('input[name="city"]').required = true;
+    document.querySelector('input[name="address"]').required = true;
+
+    // Очищаем скрытые поля почты
+    document.getElementById('selected_post_name').value = '';
+    document.getElementById('selected_post_address').value = '';
+    document.getElementById('selected-info').classList.add('d-none');
+}
+
+// ==============================================
+// ВАЛИДАЦИЯ ФОРМЫ
+// ==============================================
+document.getElementById('checkout-form').addEventListener('submit', (e) => {
+    const deliveryType = document.querySelector('input[name="delivery_type"]:checked')?.value;
+    if (deliveryType === 'post') {
+        if (!document.getElementById('selected_post_name').value.trim()) {
+            e.preventDefault();
+            alert('Пожалуйста, выберите пункт выдачи на карте.');
         }
     }
+});
 
-    tgRadio.addEventListener('change', toggleTg);
-    emailRadio.addEventListener('change', toggleTg);
-    toggleTg(); // при загрузке
-
-    // Логика переключения способов доставки
-    document.querySelectorAll('input[name="delivery_type"]').forEach(radio => {
-        radio.addEventListener('change', () => {
-            const mapBlock = document.getElementById('map-block');
-            const addrFields = document.getElementById('address-fields');
-
-            if (radio.value === 'post') {
-                mapBlock.style.display = 'block';
-                addrFields.style.display = 'none';
-                initMap();
-            } else {
-                mapBlock.style.display = 'none';
-                addrFields.style.display = 'block';
-            }
-        });
+// ==============================================
+// ОБРАБОТЧИКИ ПЕРЕКЛЮЧЕНИЯ ДОСТАВКИ
+// ==============================================
+document.querySelectorAll('input[name="delivery_type"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+        if (e.target.value === 'post') {
+            enablePostMode();
+        } else {
+            enablePickupOrCourierMode();
+        }
     });
+});
+
+// ==============================================
+// ОБРАБОТЧИКИ ДЛЯ TELEGRAM
+// ==============================================
+const tgRadio = document.getElementById('telegram');
+const emailRadio = document.getElementById('email');
+const tgField = document.getElementById('tg-field');
+const tgInput = tgField.querySelector('input');
+
+function toggleTgField() {
+    if (tgRadio.checked) {
+        tgField.classList.remove('d-none');
+        tgInput.required = true;
+    } else {
+        tgField.classList.add('d-none');
+        tgInput.required = false;
+    }
+}
+tgRadio.addEventListener('change', toggleTgField);
+emailRadio.addEventListener('change', toggleTgField);
+toggleTgField();
+
+// Если при загрузке страницы уже выбран "Почта", активируем режим
+window.addEventListener('load', () => {
+    const selectedPost = document.querySelector('input[name="delivery_type"][value="post"]:checked');
+    if (selectedPost) {
+        enablePostMode();
+    }
 });
 </script>
 {% endblock %}

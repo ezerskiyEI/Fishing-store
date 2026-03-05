@@ -1,4 +1,6 @@
 import os
+import threading
+import telebot
 import random
 import datetime
 import requests
@@ -436,14 +438,24 @@ def admin_orders():
 @login_required
 def profile():
     if request.method == 'POST':
-        file = request.files.get('avatar')
-        if file and file.filename:
-            filename = secure_filename(f"user_{current_user.id}_{file.filename}")
-            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            current_user.avatar = filename
+        if request.form.get('action') == 'save_tg':
+            new_tg = request.form.get('tg_id', '').strip()   # убираем пробелы
+            current_user.tg_id = new_tg if new_tg else None
             db.session.commit()
-            flash('Аватар обновлён!', 'success')
+            print(f"[PROFILE] Сохранён tg_id: '{new_tg}' для пользователя {current_user.id}")
+            flash('✅ Telegram ID успешно сохранён!', 'success')
+
+        # аватар (оставляем как было)
+        elif 'avatar' in request.files:
+            file = request.files.get('avatar')
+            if file and file.filename:
+                filename = secure_filename(f"user_{current_user.id}_{file.filename}")
+                os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                current_user.avatar = filename
+                db.session.commit()
+                flash('Аватар обновлён!', 'success')
+
     orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.created_at.desc()).all()
     return render_template('profile.html', orders=orders)
 
@@ -456,6 +468,176 @@ def admin_order_delete(id):
         db.session.commit()
         flash(f'Заказ #{id} успешно удалён!', 'success')
     return redirect(url_for('admin_orders'))
+
+
+# ====================== TELEGRAM БОТ (ЛОКАЛЬНЫЙ РЕЖИМ) ======================
+bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
+
+WEBAPP_URL = 'http://127.0.0.1:5000'
+
+@bot.message_handler(commands=['status'])
+def cmd_status(message):
+    tg_id = str(message.chat.id)
+    print(f"[BOT] Команда /status от {tg_id}")
+    
+    try:
+        # ←←← ОТКЛЮЧАЕМ ПРОКСИ ДЛЯ LOCALHOST
+        r = requests.get(
+            f"{WEBAPP_URL}/api/myorders/{tg_id}", 
+            timeout=10,
+            proxies={"http": None, "https": None}   # ← ЭТО ГЛАВНОЕ ИСПРАВЛЕНИЕ
+        )
+        print(f"[BOT] Ответ сайта: статус {r.status_code}")
+        
+        if r.status_code == 404:
+            bot.reply_to(message, 
+                f"❌ Аккаунт не привязан!\n\n"
+                f"Зайди в Профиль на сайте и укажи свой Telegram ID:\n"
+                f"`{tg_id}`", parse_mode='Markdown')
+            return
+        
+        data = r.json()
+        orders = data.get("orders", [])
+        
+        if not orders:
+            bot.reply_to(message, "У вас пока нет заказов 😔")
+            return
+        
+        text = "📦 **Ваши заказы:**\n\n"
+        for order in orders[:5]:
+            text += f"🆔 Заказ **#{order['id']}**\n"
+            text += f"📅 {order['date']}\n"
+            text += f"💰 **{order['total_price']} ₽**\n"
+            text += f"🔸 Статус: **{order['status']}**\n"
+            text += f"📍 {order['delivery_address'][:80]}...\n\n"
+            
+            if order.get('items'):
+                text += "🛒 Товары:\n"
+                for item in order['items']:
+                    text += f"   • {item['name']} ×{item['quantity']} — {item['price']} ₽\n"
+                text += "\n"
+        
+        bot.reply_to(message, text, parse_mode='Markdown')
+        
+    except Exception as e:
+        print(f"[BOT] ❌ ОШИБКА: {type(e).__name__} — {e}")
+        bot.reply_to(message, "⚠️ Не удалось связаться с сайтом.\nУбедись, что сайт запущен (`python app.py`).")
+
+@bot.message_handler(commands=['help'])
+def cmd_help(message):
+    bot.reply_to(message,
+        "🛠 **Помощь по заказам**\n\n"
+        "• `/status` — показать все заказы + товары\n"
+        "• Привяжи Telegram ID в Профиле на сайте\n\n"
+        "При смене статуса заказа бот пришлёт уведомление автоматически! 🎣",
+        parse_mode='Markdown')
+
+# ────────────────────────────────────────────────────────────────
+# API для Telegram-бота — список заказов пользователя по tg_id
+# ────────────────────────────────────────────────────────────────
+from flask import jsonify
+
+@app.route('/api/myorders/<string:tg_id>')
+def api_my_orders(tg_id):
+    tg_id = tg_id.strip()  # на всякий случай убираем пробелы
+
+    # ищем пользователя по tg_id
+    user = User.query.filter_by(tg_id=tg_id).first()
+
+    if not user:
+        return jsonify({
+            "success": False,
+            "error": "user_not_found",
+            "message": "Пользователь с таким Telegram ID не найден"
+        }), 404
+
+    # получаем все заказы пользователя
+    orders = Order.query.filter_by(user_id=user.id)\
+                        .order_by(Order.created_at.desc())\
+                        .all()
+
+    result = []
+
+    for order in orders:
+        # собираем товары заказа
+        items = []
+        for oi in OrderItem.query.filter_by(order_id=order.id).all():
+            product = Product.query.get(oi.product_id)
+            items.append({
+                "name": product.name if product else "[товар удалён]",
+                "quantity": oi.quantity,
+                "price": float(oi.price_at_purchase or 0)  # если есть поле price_at_purchase
+            })
+
+        result.append({
+            "id": order.id,
+            "date": order.created_at.strftime("%d.%m.%Y %H:%M"),
+            "total_price": round(float(order.total_price), 0),
+            "status": order.status,
+            "delivery_address": order.delivery_address or "—",
+            "items": items
+        })
+
+    return jsonify({
+        "success": True,
+        "orders": result,
+        "user_id": user.id,
+        "username": user.username
+    })
+
+# ================== ЗАПУСК БОТА С ЗАДЕРЖКОЙ ==================
+def run_bot():
+    import time
+    time.sleep(4)                    # даём Flask полностью запуститься
+    print("🤖 Бот успешно запущен и готов к работе!")
+    bot.infinity_polling(none_stop=True)
+
+threading.Thread(target=run_bot, daemon=True).start()
+
+
+# ===== Функция определения рейтинга клёва =====
+def get_fishing_rating(phase):
+    if phase in ["Full Moon", "New Moon"]:
+        return "Отличный", "success"
+    elif phase in ["First Quarter", "Last Quarter"]:
+        return "Средний", "warning"
+    else:
+        return "Слабый", "secondary"
+
+
+# ===== Получение лунных фаз из Open-Meteo =====
+def get_moon_calendar(lat, lon, start_date, days=30):
+    end_date = (datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=days)).strftime("%Y-%m-%d")
+
+    url = "https://api.open-meteo.com/v1/astronomy"
+    params = {
+        "latitude": lat,
+        "longitude": lon,
+        "start_date": start_date,
+        "end_date": end_date,
+        "timezone": "auto"
+    }
+
+    response = requests.get(url, params=params)
+    data = response.json()
+
+    calendar = []
+
+    for i in range(len(data["daily"]["time"])):
+        date = data["daily"]["time"][i]
+        phase = data["daily"]["moon_phase"][i]
+
+        rating_text, rating_color = get_fishing_rating(phase)
+
+        calendar.append({
+            "date": date,
+            "phase": phase,
+            "rating": rating_text,
+            "color": rating_color
+        })
+
+    return calendar
+
 
 if __name__ == '__main__':
     app.run(debug=True)
