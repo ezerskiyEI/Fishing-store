@@ -7,7 +7,6 @@
 
     <form method="POST" id="checkout-form">
 
-        <!-- Способ доставки -->
         <h5 class="mb-3">Способ доставки</h5>
         <div class="mb-4">
             <div class="form-check mb-2">
@@ -24,13 +23,11 @@
             </div>
         </div>
 
-        <!-- Обычные поля адреса (для самовывоза и курьера) -->
         <div id="address-fields" class="mb-4">
             <input type="text" name="city" class="form-control mb-2" placeholder="Город" value="Минск">
             <input type="text" name="address" class="form-control" placeholder="Улица, дом, квартира">
         </div>
 
-        <!-- Блок карты для почты (скрыт по умолчанию) -->
         <div id="map-block" style="display:none;">
             <h5 class="mb-3">Выберите пункт выдачи</h5>
 
@@ -50,7 +47,6 @@
             </div>
         </div>
 
-        <!-- ВЫБОР СПОСОБА УВЕДОМЛЕНИЯ -->
         <hr class="my-5">
         <h5 class="mb-3">Куда отправить чек и трек-код?</h5>
         <div class="mb-4">
@@ -71,7 +67,6 @@
             </div>
         </div>
 
-        <!-- Поле Telegram ID (появляется при выборе Telegram) -->
         <div class="mb-4 d-none" id="tg-field">
             <label class="form-label fw-bold">Telegram ID</label>
             <input type="text" name="tg_contact" class="form-control" 
@@ -88,8 +83,7 @@
     </form>
 </div>
 
-<!-- Yandex Maps API -->
-<script src="https://api-maps.yandex.ru/2.1/?apikey=ВАШ_КЛЮЧ&lang=ru_RU" type="text/javascript"></script>
+<script src="https://api-maps.yandex.ru/2.1/?apikey=b6bcd01e-72d1-4d07-b8b7-8e10f2da65bf&lang=ru_RU" type="text/javascript"></script>
 
 <script>
 // ==============================================
@@ -128,7 +122,7 @@ function initMap() {
         }
         ymaps.ready(() => {
             map = new ymaps.Map('yandex-map', {
-                center: [53.90, 27.56],
+                center: [53.90, 27.56], // Центр Минска
                 zoom: 7,
                 controls: ['zoomControl', 'searchControl', 'fullscreenControl']
             });
@@ -153,17 +147,38 @@ function initMap() {
 }
 
 // ==============================================
-// ОТОБРАЖЕНИЕ ТОЧЕК С ФИЛЬТРОМ
+// ОТОБРАЖЕНИЕ ТОЧЕК С ФИЛЬТРОМ (АСИНХРОННО)
 // ==============================================
-function renderPoints(filter) {
+async function renderPoints(filter) {
     if (!clusterer || allPoints.length === 0) return;
 
     clusterer.removeAll();
+    const placemarks = [];
 
-    const placemarks = allPoints
-        .filter(p => filter === 'all' || p.type === filter)
-        .map(p => {
-            const placemark = new ymaps.Placemark(p.coords, {
+    // Используем цикл for...of, так как внутри будет await для геокодирования
+    for (const p of allPoints) {
+        if (filter !== 'all' && p.type !== filter) continue;
+
+        let coords = p.coords;
+
+        // Если координат нет (null), запрашиваем их у геокодера Яндекса
+        if (!coords) {
+            try {
+                // Добавляем "Беларусь, " для точности поиска
+                const res = await ymaps.geocode('Беларусь, ' + p.addr, { results: 1 });
+                const firstGeoObject = res.geoObjects.get(0);
+                if (firstGeoObject) {
+                    coords = firstGeoObject.geometry.getCoordinates();
+                    p.coords = coords; // Кэшируем, чтобы не искать повторно при смене фильтра
+                }
+            } catch (error) {
+                console.error('Ошибка геокодирования адреса:', p.addr);
+                continue; // Пропускаем точку, если совсем ничего не нашлось
+            }
+        }
+
+        if (coords) {
+            const placemark = new ymaps.Placemark(coords, {
                 hintContent: p.addr,
                 balloonContentHeader: `<b>${p.type}</b>`,
                 balloonContentBody: `
@@ -180,7 +195,7 @@ function renderPoints(filter) {
                 preset: p.type === 'Европочта' ? 'islands#redIcon' : 'islands#blueIcon'
             });
 
-            // Добавляем обработчик выбора при открытии балуна
+            // Назначаем обработчик на кнопку внутри балуна
             placemark.events.add('balloonopen', () => {
                 setTimeout(() => {
                     document.querySelectorAll('.select-point-btn').forEach(btn => {
@@ -190,9 +205,11 @@ function renderPoints(filter) {
                 }, 100);
             });
 
-            return placemark;
-        });
+            placemarks.push(placemark);
+        }
+    }
 
+    // Массово добавляем все метки на карту
     clusterer.add(placemarks);
 }
 
@@ -203,6 +220,7 @@ function balloonSelectHandler(e) {
     const type = btn.dataset.type;
     const addr = btn.dataset.addr;
     selectPoint(type, addr);
+    
     // Закрыть балун
     if (map.balloon.isOpen()) {
         map.balloon.close();
@@ -217,15 +235,15 @@ function selectPoint(type, addr) {
     document.getElementById('selected_post_address').value = addr;
     document.getElementById('selected-text').innerText = `${type} — ${addr}`;
     document.getElementById('selected-info').classList.remove('d-none');
-    document.getElementById('selected-info').scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('selected-info').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 // ==============================================
-// ФИЛЬТРАЦИЯ (доступна глобально)
+// ФИЛЬТРАЦИЯ (теперь асинхронная)
 // ==============================================
-window.filterPoints = function(filter) {
+window.filterPoints = async function(filter) {
     currentFilter = filter;
-    renderPoints(filter);
+    await renderPoints(filter);
 };
 
 // ==============================================
@@ -242,11 +260,11 @@ async function enablePostMode() {
     document.querySelector('input[name="city"]').required = false;
     document.querySelector('input[name="address"]').required = false;
 
-    await initMap();                 // создаём карту, если ещё нет
-    if (allPoints.length === 0) {    // загружаем точки, если ещё не загружены
+    await initMap();
+    if (allPoints.length === 0) {
         await loadPointsFromJson();
     }
-    renderPoints(currentFilter);      // показываем
+    await renderPoints(currentFilter);
 }
 
 // ==============================================
