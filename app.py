@@ -164,11 +164,16 @@ def delivery(): return render_template('delivery.html')
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        user = User.query.filter_by(username=request.form.get('username')).first()
-        if user and check_password_hash(user.password, request.form.get('password')):
+        identity = request.form.get('login_identity')
+        password = request.form.get('password')
+        
+        # Ищем пользователя либо по username, либо по email
+        user = User.query.filter((User.username == identity) | (User.email == identity)).first()
+        
+        if user and check_password_hash(user.password, password):
             login_user(user)
-            return redirect(request.args.get('next') or url_for('index'))
-        flash('Неверный логин или пароль', 'danger')
+            return redirect(url_for('profile'))
+        flash('Неверные данные для входа')
     return render_template('login.html')
 
 @app.route('/logout')

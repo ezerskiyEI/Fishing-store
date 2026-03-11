@@ -83,4 +83,20 @@
         </div>
     </div>
 </div>
+<h5 class="mb-3 text-start">📧 Электронная почта</h5>
+<form method="POST" class="mb-4">
+    <input type="hidden" name="action" value="update_email">
+    <div class="input-group">
+        <input type="email" 
+               name="email" 
+               class="form-control" 
+               placeholder="Ваш Email"
+               value="{{ current_user.email or '' }}"
+               required>
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+    </div>
+    <div class="form-text text-muted small mt-1">
+        Эта почта будет использоваться для входа и получения чеков.
+    </div>
+</form>
 {% endblock %}
