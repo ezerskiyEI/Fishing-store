@@ -1,4 +1,5 @@
 import os
+import cloudinary
 import threading
 import telebot
 import random
@@ -12,6 +13,14 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_mail import Mail, Message
 from sqlalchemy import text
+
+
+cloudinary.config(
+    cloud_name="YOUR_CLOUD_NAME",
+    api_key="YOUR_API_KEY",
+    api_secret="YOUR_API_SECRET"
+)
+
 
 app = Flask(__name__)
 
@@ -473,6 +482,11 @@ def admin_order_delete(id):
         db.session.commit()
         flash(f'Заказ #{id} успешно удалён!', 'success')
     return redirect(url_for('admin_orders'))
+
+
+@app.route('/help')
+def help():
+    return render_template('help.html')
 
 
 # ====================== TELEGRAM БОТ (ЛОКАЛЬНЫЙ РЕЖИМ) ======================
