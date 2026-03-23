@@ -1,0 +1,320 @@
+<!-- templates/help.html -->
+{% extends "base.html" %}
+
+{% block title %}Помощь - Fishing Shop{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+    <!-- Заголовок -->
+    <div class="text-center mb-5">
+        <h1 class="display-5 fw-bold">Помощь и поддержка</h1>
+        <p class="lead text-muted">Мы всегда готовы помочь вам с выбором и ответить на вопросы</p>
+    </div>
+
+    <!-- Контактная информация магазина (телефоны, email) -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <i class="bi bi-telephone fs-1 text-warning mb-3"></i>
+                    <h5 class="card-title">Телефоны</h5>
+                    <p class="card-text mb-1">
+                        <a href="tel:+375291234567" class="text-decoration-none text-dark" title="Позвонить +375 (29) 123-45-67">+375 (29) 123-45-67</a>
+                    </p>
+                    <p class="card-text">
+                        <a href="tel:+375337654321" class="text-decoration-none text-dark" title="Позвонить +375 (33) 765-43-21">+375 (33) 765-43-21</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <i class="bi bi-envelope fs-1 text-warning mb-3"></i>
+                    <h5 class="card-title">Email</h5>
+                    <p class="card-text mb-1">
+                        <a href="mailto:info@fishingshop.by" class="text-decoration-none text-dark">info@fishingshop.by</a>
+                    </p>
+                    <p class="card-text">
+                        <a href="mailto:support@fishingshop.by" class="text-decoration-none text-dark">support@fishingshop.by</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <i class="bi bi-clock fs-1 text-warning mb-3"></i>
+                    <h5 class="card-title">Режим работы</h5>
+                    <p class="card-text mb-1">Пн–Пт: 9:00 – 20:00</p>
+                    <p class="card-text">Сб–Вс: 10:00 – 18:00</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Социальные сети (активные ссылки) -->
+    <div class="text-center mb-5">
+        <h5 class="mb-3">Мы в соцсетях</h5>
+        <div class="d-flex justify-content-center gap-3">
+            <!-- Ссылка на Telegram канал по заданию -->
+            <a href="https://t.me/fishing_store_Fishka" class="btn btn-outline-dark rounded-circle p-3" style="width: 50px; height: 50px;" target="_blank" title="Telegram канал"><i class="bi bi-telegram"></i></a>
+            <a href="https://wa.me/375291234567" class="btn btn-outline-dark rounded-circle p-3" style="width: 50px; height: 50px;" target="_blank" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+            <a href="https://instagram.com/fishingshop.by" class="btn btn-outline-dark rounded-circle p-3" style="width: 50px; height: 50px;" target="_blank" title="Instagram"><i class="bi bi-instagram"></i></a>
+            <a href="https://vk.com/fishingshop" class="btn btn-outline-dark rounded-circle p-3" style="width: 50px; height: 50px;" target="_blank" title="VK"><i class="bi bi-vk"></i></a>
+            <a href="mailto:info@fishingshop.by" class="btn btn-outline-dark rounded-circle p-3" style="width: 50px; height: 50px;" title="Написать письмо"><i class="bi bi-envelope"></i></a>
+        </div>
+    </div>
+
+    <!-- Наша команда -->
+    <h2 class="text-center mb-4">Наша команда</h2>
+    <div class="row g-4">
+        <!-- Сотрудник 2 -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm text-center">
+                <img src="{{ url_for('static', filename='Arsen.png') }}" class="card-img-top rounded-circle mx-auto mt-4" style="width: 120px; height: 120px; object-fit: cover;" alt="Фото">
+                <div class="card-body">
+                    <h5 class="card-title">Юрченко Арсений Алексеевич</h5>
+                    <p class="text-warning fw-bold">Основатель Сети рыболовных магазинов ""</p>
+                    <p class="card-text small">Специалист по спиннинговой ловле. Участник и победитель соревнований.</p>
+                    <div class="d-flex justify-content-center gap-3 mt-3">
+                        <a href="tel:+375332223344" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" title="Позвонить +375 (33) 222-33-44"><i class="bi bi-telephone"></i></a>
+                        <a href="mailto:a.petrova@fishingshop.by" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" title="Написать Анне"><i class="bi bi-envelope"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+       <!-- Сотрудник 1: директор -->
+<div class="col-md-6 col-lg-4">
+    <div class="card h-100 border-0 shadow-sm text-center">
+        <img src="{{ url_for('static', filename='MEnt.jpg') }}" class="card-img-top rounded-circle mx-auto mt-4" style="width: 120px; height: 120px; object-fit: cover;" alt="Фото директора">
+        <div class="card-body">
+            <h5 class="card-title">Езерский Егор Игоревич</h5>
+            <p class="text-warning fw-bold">Директор</p>
+            <p class="card-text small">Основатель магазина по адресу Машерова 4, опыт рыбалки более 20 лет. Поможет с выбором любого товара.</p>
+            <div class="d-flex justify-content-center gap-3 mt-3">
+                <button type="button" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" 
+                        title="+375 (29) 111-22-33"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#phoneModal"
+                        data-employee-name="Езерский Егор Игоревич"
+                        data-phone="+375333179042"
+                        data-phone-formatted="+375 (33) 317-90-42">
+                    <i class="bi bi-telephone"></i>
+                </button>
+                <a href="mailto:director@fishingshop.by" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" title="Написать директору"><i class="bi bi-envelope"></i></a>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Сотрудник 2 -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm text-center">
+                <img src="{{ url_for('static', filename='Ded_photo.jpg') }}" class="card-img-top rounded-circle mx-auto mt-4" style="width: 120px; height: 120px; object-fit: cover;" alt="Фото">
+                <div class="card-body">
+                    <h5 class="card-title">Хвасько Виктор Сергеевич</h5>
+                    <p class="text-warning fw-bold"> Директор</p>
+                    <p class="card-text small">Основатель магазина по адресу Леонида Беды, 4, корпус 1, ком. 418А. Специалист по спиннинговой ловле. Участница соревнований.</p>
+                    <div class="d-flex justify-content-center gap-3 mt-3">
+                        <a href="tel:+375332223344" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" title="Позвонить +375 (33) 222-33-44"><i class="bi bi-telephone"></i></a>
+                        <a href="mailto:a.petrova@fishingshop.by" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" title="Написать Анне"><i class="bi bi-envelope"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <!-- Сотрудник 3 -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm text-center">
+                <img src="https://randomuser.me/api/portraits/men/2.jpg" class="card-img-top rounded-circle mx-auto mt-4" style="width: 120px; height: 120px; object-fit: cover;" alt="Фото">
+                <div class="card-body">
+                    <h5 class="card-title">Сидоров Алексей Петрович</h5>
+                    <p class="text-warning fw-bold">Технический специалист</p>
+                    <p class="card-text small">Мастер по ремонту снастей. Консультации по технике.</p>
+                    <div class="d-flex justify-content-center gap-3 mt-3">
+                        <a href="tel:+375293334455" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" title="Позвонить +375 (29) 333-44-55"><i class="bi bi-telephone"></i></a>
+                        <a href="mailto:tech@fishingshop.by" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" title="Написать Алексею"><i class="bi bi-envelope"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Сотрудник 4 -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm text-center">
+                <img src="https://randomuser.me/api/portraits/women/2.jpg" class="card-img-top rounded-circle mx-auto mt-4" style="width: 120px; height: 120px; object-fit: cover;" alt="Фото">
+                <div class="card-body">
+                    <h5 class="card-title">Козлова Елена Дмитриевна</h5>
+                    <p class="text-warning fw-bold">Менеджер по работе с клиентами</p>
+                    <p class="card-text small">Оформление заказов, доставка и оплата.</p>
+                    <div class="d-flex justify-content-center gap-3 mt-3">
+                        <a href="tel:+375334445566" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" title="Позвонить +375 (33) 444-55-66"><i class="bi bi-telephone"></i></a>
+                        <a href="mailto:manager@fishingshop.by" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" title="Написать Елене"><i class="bi bi-envelope"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Сотрудник 5 -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm text-center">
+                <img src="https://randomuser.me/api/portraits/men/3.jpg" class="card-img-top rounded-circle mx-auto mt-4" style="width: 120px; height: 120px; object-fit: cover;" alt="Фото">
+                <div class="card-body">
+                    <h5 class="card-title">Морозов Дмитрий Александрович</h5>
+                    <p class="text-warning fw-bold">Эксперт по фидерной ловле</p>
+                    <p class="card-text small">Проводит мастер-классы и семинары.</p>
+                    <div class="d-flex justify-content-center gap-3 mt-3">
+                        <a href="tel:+375295556677" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" title="Позвонить +375 (29) 555-66-77"><i class="bi bi-telephone"></i></a>
+                        <a href="mailto:expert@fishingshop.by" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" title="Написать Дмитрию"><i class="bi bi-envelope"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Сотрудник 6 -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm text-center">
+                <img src="https://randomuser.me/api/portraits/women/3.jpg" class="card-img-top rounded-circle mx-auto mt-4" style="width: 120px; height: 120px; object-fit: cover;" alt="Фото">
+                <div class="card-body">
+                    <h5 class="card-title">Соколова Мария Игоревна</h5>
+                    <p class="text-warning fw-bold">Администратор сайта</p>
+                    <p class="card-text small">Помощь в онлайн-заказах, техподдержка.</p>
+                    <div class="d-flex justify-content-center gap-3 mt-3">
+                        <a href="tel:+375336667788" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" title="Позвонить +375 (33) 666-77-88"><i class="bi bi-telephone"></i></a>
+                        <a href="mailto:web@fishingshop.by" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" title="Написать Марии"><i class="bi bi-envelope"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Часто задаваемые вопросы (аккордеон) -->
+    <h2 class="text-center mt-5 mb-4">Часто задаваемые вопросы</h2>
+    <div class="accordion shadow-sm" id="faqAccordion">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingOne">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true">
+                    Как оформить заказ?
+                </button>
+            </h2>
+            <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                    Добавьте товары в корзину, перейдите в оформление заказа, заполните данные доставки и выберите способ оплаты. После подтверждения вы получите уведомление на email или в Telegram.
+                </div>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingTwo">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                    Какие способы доставки доступны?
+                </button>
+            </h2>
+            <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                    Курьером по городу, почтой в любой населённый пункт, а также самовывоз из наших пунктов выдачи. Стоимость рассчитывается при оформлении.
+                </div>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingThree">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                    Как привязать Telegram для уведомлений?
+                </button>
+            </h2>
+            <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                    В профиле на сайте укажите ваш Telegram ID (узнать можно у бота @userinfobot). После этого вы будете получать уведомления о статусе заказов.
+                </div>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingFour">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour">
+                    Можно ли вернуть товар?
+                </button>
+            </h2>
+            <div id="collapseFour" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                    Да, в течение 14 дней при сохранении товарного вида и упаковки. Для возврата обратитесь к менеджерам по контактным телефонам.
+                </div>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingFive">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive">
+                    Есть ли гарантия на товары?
+                </button>
+            </h2>
+            <div id="collapseFive" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                    На все товары предоставляется гарантия производителя. Срок указан в гарантийном талоне. Подробности у консультантов.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Адреса и карта (взято из доставки) -->
+    <div class="mt-5">
+        <h2 class="text-center mb-4">Наши адреса</h2>
+
+        <!-- Блок с адресами -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="card shadow border-0 h-100">
+                    <div class="card-header bg-success text-white py-3">
+                        <h5 class="mb-0"><i class="bi bi-shop-window me-2"></i>Леонида Беды, 4, корпус 1, ком. 418А</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-1"><strong>Режим работы:</strong> Пн–Пт 10:00–19:00, Сб 10:00–15:00</p>
+                        <p class="mb-0"><strong>Самовывоз бесплатно</strong></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow border-0 h-100">
+                    <div class="card-header bg-success text-white py-3">
+                        <h5 class="mb-0"><i class="bi bi-shop-window me-2"></i>Машерова, 4, ком. 43</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-1"><strong>Режим работы:</strong> Пн–Пт 10:00–19:00, Сб 10:00–15:00</p>
+                        <p class="mb-0"><strong>Самовывоз бесплатно</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Яндекс.Карта -->
+        <div id="map" style="height: 520px; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.15);"></div>
+    </div>
+</div>
+
+<!-- Яндекс.Карты и скрипт для двух меток -->
+<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU"></script>
+<script>
+    ymaps.ready(function () {
+        var myMap = new ymaps.Map("map", {
+            center: [53.92, 27.58],
+            zoom: 13,
+            controls: ['zoomControl', 'fullscreenControl', 'routeButtonControl']
+        });
+
+        // Первый адрес: Леонида Беды, 4 к1, 418А
+        var placemark1 = new ymaps.Placemark([53.930152, 27.588951], {
+            balloonContentHeader: "Леонида Беды, 4 к1, 418А",
+            balloonContentBody: "<br>Пн–Пт 10:00–19:00, Сб 10:00–15:00"
+        }, {
+            preset: 'islands#redDotIcon'
+        });
+
+        // Второй адрес: Машерова, 4, ком. 43
+        var placemark2 = new ymaps.Placemark([53.911725, 27.576761], {
+            balloonContentHeader: "Машерова, 4, ком. 43",
+            balloonContentBody: "<br>Пн–Пт 10:00–19:00, Сб 10:00–15:00"
+        }, {
+            preset: 'islands#redDotIcon'
+        });
+
+        myMap.geoObjects.add(placemark1);
+        myMap.geoObjects.add(placemark2);
+
+        myMap.setBounds(myMap.geoObjects.getBounds(), { checkZoomRange: true });
+    });
+</script>
+{% endblock %}
