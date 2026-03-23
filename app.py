@@ -1,12 +1,15 @@
 import os
+import ssl
+import re
 import cloudinary
 import threading
 import telebot
 import random
-import datetime
 import requests
+import feedparser
+from datetime import datetime, timedelta # Важно: импортируем только так
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -14,12 +17,14 @@ from werkzeug.utils import secure_filename
 from flask_mail import Mail, Message
 from sqlalchemy import text
 
-
 cloudinary.config(
     cloud_name="YOUR_CLOUD_NAME",
     api_key="YOUR_API_KEY",
     api_secret="YOUR_API_SECRET"
 )
+
+
+ssl._create_default_https_context = ssl._create_unverified_context
 
 
 app = Flask(__name__)
@@ -78,7 +83,8 @@ class Order(db.Model):
     __tablename__ = 'orders'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    # ИСПРАВЛЕНО: просто datetime.utcnow без повтора слова datetime
+    created_at = db.Column(db.DateTime, default=datetime.utcnow) 
     total_price = db.Column(db.Float)
     delivery_address = db.Column(db.String(255))
     status = db.Column(db.String(50), default='В обработке')
@@ -158,10 +164,134 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
+
+def get_moon_phase(date):
+    """Расчет фазы луны для рыболовного календаря"""
+    lunar_days = 29.53058770576
+    new_moon = datetime(1970, 1, 7, 20, 35, 0)
+    phase = ((date - new_moon).total_seconds() / 86400) % lunar_days
+    
+    if phase < 1.84 or phase > 27.69: 
+        return "🌑 Новолуние", "dark", "Слабый"
+    elif phase < 5.53: 
+        return "🌒 Растущая", "success", "Отличный"
+    elif phase < 12.91: 
+        return "🌓 Первая четверть", "warning", "Средний"
+    elif phase < 16.61: 
+        return "🌕 Полнолуние", "danger", "Слабый"
+    elif phase < 20.30: 
+        return "🌗 Убывающая", "success", "Отличный"
+    else: 
+        return "🌘 Последняя четверть", "warning", "Средний"
+
+def generate_calendar(start_date, days=6):
+    """Генерация данных для календаря на несколько дней вперед"""
+    calendar = []
+    for i in range(days):
+        current_date = start_date + timedelta(days=i)
+        phase_name, color, rating = get_moon_phase(current_date)
+        calendar.append({
+            "date": current_date.strftime("%d.%m"),
+            "phase": phase_name,
+            "color": color,
+            "rating": rating
+        })
+    return calendar
+
+def get_fresh_news():
+    sources = [
+        "https://fishingby.com/feed/",
+        "https://people.onliner.by/tag/rybalka/feed"
+    ]
+    
+    all_entries = []
+    # Эмулируем реальный браузер
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
+
+    for url in sources:
+        try:
+            # Загружаем через requests, так как он лучше обходит блокировки
+            response = requests.get(url, headers=headers, timeout=10)
+            response.encoding = 'utf-8'
+            feed = feedparser.parse(response.text)
+            
+            if feed.entries:
+                all_entries.extend(feed.entries)
+                print(f"✅ Загружено {len(feed.entries)} новостей из {url}")
+        except Exception as e:
+            print(f"⚠️ Ошибка на источнике {url}: {e}")
+
+    # Сортировка по дате (самые свежие сверху)
+    all_entries.sort(key=lambda x: x.get('published_parsed', 0), reverse=True)
+
+    news_list = []
+    for entry in all_entries[:3]: # Берем только 3 для витрины
+        # Ищем картинку в описании (типично для Onliner)
+        content = entry.get('summary', '') + entry.get('description', '')
+        img_url = 'https://images.unsplash.com/photo-1506477331477-33d5d8b3dc85?w=800' # Красивый фон по умолчанию
+        
+        # Регулярка для поиска тега <img> и его src
+        img_match = re.search(r'<img [^>]*src="([^"]+)"', content)
+        
+        if 'media_content' in entry and len(entry.media_content) > 0:
+            img_url = entry.media_content[0]['url']
+        elif img_match:
+            img_url = img_match.group(1)
+
+        # Очищаем текст от HTML-тегов
+        clean_text = re.sub('<[^<]+?>', '', content).strip()
+        
+        news_list.append({
+            "title": entry.title,
+            "summary": clean_text[:110] + "...",
+            "link": entry.link, # Ссылка на оригинальную статью
+            "image": img_url
+        })
+
+    return news_list if news_list else get_mock_news()
+
+def get_mock_news():
+    """Запасные новости на случай ошибки сервера"""
+    return [
+        {
+            "title": "Секреты весеннего клёва 2026",
+            "summary": "Разбираемся, на что лучше ловить щуку в этом сезоне...",
+            "link": "#",
+            "image": "https://images.unsplash.com/photo-1544551763-47a0159f9234?w=400"
+        },
+        {
+            "title": "Обзор новинок Shimano",
+            "summary": "Новые катушки серии Stella поступили на тестирование...",
+            "link": "#",
+            "image": "https://images.unsplash.com/photo-1506477331477-33d5d8b3dc85?w=400"
+        }
+    ]
+
 # ====================== МАРШРУТЫ ======================
+
 @app.route('/')
 def index():
-    return render_template('index.html')
+    # Работа с датой для календаря
+    date_str = request.args.get('date')
+    try:
+        selected_date = datetime.strptime(date_str, '%Y-%m-%d') if date_str else datetime.now()
+    except:
+        selected_date = datetime.now()
+
+    # Сбор данных
+    calendar_data = generate_calendar(selected_date)
+    news_data = get_fresh_news()
+
+    return render_template(
+        'index.html', 
+        calendar=calendar_data, 
+        news=news_data, 
+        selected_date=selected_date.strftime('%Y-%m-%d')
+    )
+
 
 @app.route('/promotions')
 def promotions(): return render_template('promotions.html')
