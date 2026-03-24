@@ -7,6 +7,7 @@ import telebot
 import random
 import requests
 import feedparser
+from bs4 import BeautifulSoup
 from datetime import datetime, timedelta # Важно: импортируем только так
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
@@ -71,6 +72,7 @@ class Product(db.Model):
     category = db.Column(db.String(50))
     description = db.Column(db.Text)
     image = db.Column(db.String(255), default='no_image.png')
+    old_price = db.Column(db.Float, nullable=True)   # ← НОВАЯ КОЛОНКА
 
 class Cart(db.Model):
     __tablename__ = 'cart'
@@ -108,6 +110,8 @@ with app.app_context():
     db.create_all()
     try:
         # Добавление колонок в orders
+        db.session.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS old_price FLOAT;"))
+        db.session.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;"))
         db.session.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;"))
         db.session.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_address VARCHAR(255);"))
         db.session.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS notification_method VARCHAR(20);"))
@@ -200,58 +204,111 @@ def generate_calendar(start_date, days=6):
     return calendar
 
 def get_fresh_news():
-    sources = [
-        "https://fishingby.com/feed/",
-        "https://people.onliner.by/tag/rybalka/feed"
-    ]
+    news_list = []
     
-    all_entries = []
-    # Эмулируем реальный браузер
+    # Притворяемся обычным браузером, чтобы нас не заблокировали
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7'
     }
 
-    for url in sources:
-        try:
-            # Загружаем через requests, так как он лучше обходит блокировки
-            response = requests.get(url, headers=headers, timeout=10)
-            response.encoding = 'utf-8'
-            feed = feedparser.parse(response.text)
+    # ==========================================
+    # 1. Парсинг Onliner (HTML)
+    # ==========================================
+    try:
+        onliner_url = "https://people.onliner.by/tag/rybalka"
+        resp_o = requests.get(onliner_url, headers=headers, timeout=8)
+        
+        if resp_o.status_code == 200:
+            soup = BeautifulSoup(resp_o.text, 'html.parser')
             
-            if feed.entries:
-                all_entries.extend(feed.entries)
-                print(f"✅ Загружено {len(feed.entries)} новостей из {url}")
-        except Exception as e:
-            print(f"⚠️ Ошибка на источнике {url}: {e}")
+            # Onliner обычно хранит новости в таких блоках
+            articles = soup.find_all('div', class_=re.compile(r'news-tidings__item|news-header__item|news-text'))
+            
+            count = 0
+            for article in articles:
+                if count >= 2: break # Берём 2 последние новости отсюда
+                
+                link_tag = article.find('a')
+                if not link_tag: continue
+                
+                link = link_tag.get('href', '')
+                if link.startswith('/'):
+                    link = "https://people.onliner.by" + link
+                
+                title_tag = article.find(class_=re.compile(r'title|subtitle'))
+                title = title_tag.get_text(strip=True) if title_tag else "Новость Onliner"
+                
+                # Ищем картинку (Onliner часто прячет её в background-image)
+                img_url = 'https://images.unsplash.com/photo-1544551763-47a0159f9234?w=800' # Дефолт
+                
+                # Поиск обычного тега <img>
+                img_tag = article.find('img')
+                if img_tag and img_tag.get('src'):
+                    img_url = img_tag.get('src')
+                else:
+                    # Поиск картинки в стилях div-а
+                    bg_div = article.find(style=re.compile(r'background-image'))
+                    if bg_div:
+                        match = re.search(r'url\([\'"]?(.*?)[\'"]?\)', bg_div['style'])
+                        if match: 
+                            img_url = match.group(1)
 
-    # Сортировка по дате (самые свежие сверху)
-    all_entries.sort(key=lambda x: x.get('published_parsed', 0), reverse=True)
+                summary_tag = article.find(class_=re.compile(r'speech|text|description'))
+                summary = summary_tag.get_text(strip=True) if summary_tag else "Читайте подробности на сайте..."
 
-    news_list = []
-    for entry in all_entries[:3]: # Берем только 3 для витрины
-        # Ищем картинку в описании (типично для Onliner)
-        content = entry.get('summary', '') + entry.get('description', '')
-        img_url = 'https://images.unsplash.com/photo-1506477331477-33d5d8b3dc85?w=800' # Красивый фон по умолчанию
+                news_list.append({
+                    "title": title,
+                    "summary": summary[:110] + "...",
+                    "link": link,
+                    "image": img_url,
+                    "timestamp": datetime.now().timestamp() + 10 # Искусственно поднимаем выше в сортировке
+                })
+                count += 1
+    except Exception as e:
+        print(f"⚠️ Ошибка парсинга Onliner: {e}")
+
+    # ==========================================
+    # 2. Парсинг Google News (RSS)
+    # ==========================================
+    try:
+        # Важно: мы добавляем /rss/ перед /topics/, чтобы получить чистые данные, а не тяжелый скриптовый сайт
+        google_url = "https://news.google.com/rss/topics/CAAqIggKIhxDQkFTRHdvSkwyMHZNREZuYkRVd0VnSnlkU2dBUAE?hl=ru&gl=RU&ceid=RU:ru"
+        resp_g = requests.get(google_url, headers=headers, timeout=8)
         
-        # Регулярка для поиска тега <img> и его src
-        img_match = re.search(r'<img [^>]*src="([^"]+)"', content)
-        
-        if 'media_content' in entry and len(entry.media_content) > 0:
-            img_url = entry.media_content[0]['url']
-        elif img_match:
-            img_url = img_match.group(1)
+        if resp_g.status_code == 200:
+            feed = feedparser.parse(resp_g.content)
+            
+            for entry in feed.entries[:2]: # Берём 2 новости отсюда
+                content = entry.get('summary', '') + entry.get('description', '')
+                
+                # Дефолтная картинка, если Google не отдаст фото
+                img_url = 'https://images.unsplash.com/photo-1506477331477-33d5d8b3dc85?w=800'
+                
+                # Достаем тег <img> из описания RSS-ленты
+                img_match = re.search(r'<img [^>]*src=["\']([^"\']+)["\']', content)
+                if img_match:
+                    img_url = img_match.group(1)
 
-        # Очищаем текст от HTML-тегов
-        clean_text = re.sub('<[^<]+?>', '', content).strip()
-        
-        news_list.append({
-            "title": entry.title,
-            "summary": clean_text[:110] + "...",
-            "link": entry.link, # Ссылка на оригинальную статью
-            "image": img_url
-        })
+                clean_text = re.sub('<[^<]+?>', '', content).strip()
+                clean_text = " ".join(clean_text.split()) # Убираем лишние пробелы
 
-    return news_list if news_list else get_mock_news()
+                news_list.append({
+                    "title": entry.title,
+                    "summary": clean_text[:110] + "...",
+                    "link": entry.link,
+                    "image": img_url,
+                    "timestamp": time.mktime(entry.published_parsed) if 'published_parsed' in entry else datetime.now().timestamp()
+                })
+    except Exception as e:
+        print(f"⚠️ Ошибка парсинга Google News: {e}")
+
+    # Сортируем собранные новости (сначала самые свежие)
+    news_list.sort(key=lambda x: x.get('timestamp', 0), reverse=True)
+
+    # Возвращаем максимум 3 новости для красивого отображения в шаблоне
+    return news_list[:3] if news_list else get_mock_news()
 
 def get_mock_news():
     """Запасные новости на случай ошибки сервера"""
@@ -294,7 +351,15 @@ def index():
 
 
 @app.route('/promotions')
-def promotions(): return render_template('promotions.html')
+def promotions():
+    # Показываем только товары со скидкой
+    discounted = Product.query.filter(
+        Product.old_price.isnot(None),
+        Product.price < Product.old_price
+    ).all()
+    
+    return render_template('promotions.html', products=discounted)
+
 @app.route('/about')
 def about(): return render_template('about.html')
 @app.route('/delivery')
@@ -511,21 +576,49 @@ def admin_panel():
         price = float(request.form.get('price'))
         category = request.form.get('category')
         desc = request.form.get('description')
+        
+        # ← НОВОЕ: старая цена
+        old_price_str = request.form.get('old_price', '').strip()
+        old_price = float(old_price_str) if old_price_str else None
+
         file = request.files.get('image')
         filename = None
         if file and file.filename:
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['PRODUCT_UPLOADS'], filename))
+
         if p_id:
             p = db.session.get(Product, int(p_id))
-            p.name = name; p.price = price; p.category = category; p.description = desc
-            if filename: p.image = filename
+            p.name = name
+            p.price = price
+            p.category = category
+            p.description = desc
+            p.old_price = old_price
+            if filename:
+                p.image = filename
         else:
-            new_p = Product(name=name, price=price, category=category, description=desc, image=filename or 'no_image.png')
+            new_p = Product(
+                name=name, price=price, category=category,
+                description=desc, image=filename or 'no_image.png',
+                old_price=old_price
+            )
             db.session.add(new_p)
         db.session.commit()
+        flash('Товар сохранён!', 'success')
         return redirect(url_for('admin_panel'))
+
     return render_template('admin.html', products=Product.query.all())
+
+@app.route('/admin/promote/<int:id>')
+@admin_required
+def admin_promote(id):
+    p = db.session.get(Product, id)
+    if p and (p.old_price is None or p.old_price <= p.price):
+        p.old_price = p.price          # фиксируем старую цену
+        db.session.commit()
+        flash(f'✅ Товар «{p.name}» добавлен в акции! Теперь снизьте цену.', 'success')
+    return redirect(url_for('admin_panel'))
+
 
 @app.route('/admin/delete/<int:id>')
 @admin_required
@@ -577,6 +670,18 @@ def admin_orders():
     
     orders = query.all()
     return render_template('admin_orders.html', orders=orders, filter_type=filter_type, User=User)
+
+
+@app.route('/sales')
+def sales():
+    # Показываем ТОЛЬКО товары в акции
+    discounted_products = Product.query.filter(
+        Product.old_price.isnot(None),
+        Product.old_price > Product.price
+    ).all()
+    
+    return render_template('sales.html', products=discounted_products)
+
 
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required

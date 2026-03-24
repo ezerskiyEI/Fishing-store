@@ -1,325 +1,86 @@
 {% extends "base.html" %}
 
-{% block title %}Доставка и оплата{% endblock %}
+{% block title %}Акции и скидки — Fishing Shop{% endblock %}
 
-{% block content %}
-<div class="container py-4">
-    <!-- Навигация -->
-    <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Главная</a></li>
-            <li class="breadcrumb-item"><a href="{{ url_for('catalog') }}">Каталог</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Доставка</li>
-        </ol>
-    </nav>
-    
+{% block body %}
+<div class="container py-5">
     <!-- Заголовок -->
     <div class="text-center mb-5">
-        <h1 class="display-5 fw-bold mb-3">🚚 Доставка и оплата</h1>
-        <p class="lead text-muted">Выберите удобный способ получения заказа и оплаты</p>
+        <h1 class="display-5 fw-bold mb-3">🔥 Акции и скидки</h1>
+        <p class="lead text-muted">Товары со сниженной ценой — успей купить!</p>
     </div>
-    
-    <!-- Карточки способов доставки -->
-    <div class="row g-4 mb-5">
-        {% for option in delivery_options %}
-        <div class="col-md-6 col-lg-3">
-            <div class="card h-100 shadow-sm border-0 {% if option.free_threshold == 0 %}border-success border-2{% endif %}">
-                <div class="card-body text-center p-4">
-                    <div class="display-3 mb-3">{{ option.icon }}</div>
-                    <h4 class="card-title mb-3">{{ option.name }}</h4>
-                    
-                    <div class="mb-3">
-                        {% if option.price == 0 %}
-                        <h2 class="text-success mb-0">Бесплатно</h2>
-                        {% elif option.free_threshold > 0 %}
-                        <h3 class="mb-1">{{ option.price }} ₽</h3>
-                        <small class="text-muted">Бесплатно от {{ option.free_threshold }} ₽</small>
-                        {% else %}
-                        <h3 class="mb-0">{{ option.price }} ₽</h3>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mb-4">
-                        <p class="mb-1"><i class="fas fa-clock text-primary me-2"></i>{{ option.time }}</p>
-                        <p class="mb-0"><i class="fas fa-map-marker-alt text-success me-2"></i>По всей России</p>
-                    </div>
-                    
-                    <button class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#deliveryModal{{ loop.index }}">
-                        <i class="fas fa-info-circle me-2"></i> Подробнее
-                    </button>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    
-    <!-- Бесплатная доставка баннер -->
-    <div class="card bg-success bg-opacity-10 border-success border-2 mb-5">
-        <div class="card-body p-4">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <h3 class="fw-bold mb-2">🎉 Бесплатная доставка при заказе от 3000 рублей</h3>
-                    <p class="mb-0">Закажите товаров на сумму от 3000 рублей и получите бесплатную доставку курьером по Москве.</p>
-                </div>
-                <div class="col-md-4 text-end">
-                    <a href="{{ url_for('catalog') }}" class="btn btn-success btn-lg">
-                        <i class="fas fa-shopping-cart me-2"></i> Перейти в каталог
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Способы оплаты -->
-    <div class="row g-4 mb-5">
-        <div class="col-lg-8">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">💳 Способы оплаты</h4>
-                </div>
-                <div class="card-body">
-                    <div class="row g-4">
-                        <div class="col-md-6">
-                            <div class="d-flex align-items-center mb-4">
-                                <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
-                                    <i class="fas fa-credit-card fa-2x text-primary"></i>
-                                </div>
-                                <div>
-                                    <h5 class="mb-1">Банковской картой</h5>
-                                    <p class="text-muted mb-0">Visa, Mastercard, МИР</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="d-flex align-items-center mb-4">
-                                <div class="bg-success bg-opacity-10 p-3 rounded-circle me-3">
-                                    <i class="fas fa-money-bill-wave fa-2x text-success"></i>
-                                </div>
-                                <div>
-                                    <h5 class="mb-1">Наличными курьеру</h5>
-                                    <p class="text-muted mb-0">При получении заказа</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="d-flex align-items-center mb-4">
-                                <div class="bg-warning bg-opacity-10 p-3 rounded-circle me-3">
-                                    <i class="fas fa-mobile-alt fa-2x text-warning"></i>
-                                </div>
-                                <div>
-                                    <h5 class="mb-1">Электронные кошельки</h5>
-                                    <p class="text-muted mb-0">ЮMoney, Qiwi, WebMoney</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="d-flex align-items-center mb-4">
-                                <div class="bg-info bg-opacity-10 p-3 rounded-circle me-3">
-                                    <i class="fas fa-university fa-2x text-info"></i>
-                                </div>
-                                <div>
-                                    <h5 class="mb-1">Банковский перевод</h5>
-                                    <p class="text-muted mb-0">Для юридических лиц</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-lg-4">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-success text-white">
-                    <h4 class="mb-0">🛡️ Безопасность платежей</h4>
-                </div>
-                <div class="card-body">
-                    <ul class="list-unstyled">
-                        <li class="mb-3">
-                            <i class="fas fa-shield-alt text-success me-2"></i>
-                            <strong>SSL-шифрование</strong>
-                            <p class="small text-muted mb-0">Все данные защищены</p>
-                        </li>
-                        <li class="mb-3">
-                            <i class="fas fa-lock text-success me-2"></i>
-                            <strong>PCI DSS стандарт</strong>
-                            <p class="small text-muted mb-0">Международный стандарт безопасности</p>
-                        </li>
-                        <li class="mb-3">
-                            <i class="fas fa-user-shield text-success me-2"></i>
-                            <strong>Защита от мошенников</strong>
-                            <p class="small text-muted mb-0">3D-Secure технология</p>
-                        </li>
-                        <li>
-                            <i class="fas fa-file-invoice text-success me-2"></i>
-                            <strong>Электронные чеки</strong>
-                            <p class="small text-muted mb-0">Чеки отправляются на email</p>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Карта сроков доставки -->
-    <div class="card shadow-sm border-0 mb-5">
-        <div class="card-header bg-info text-white">
-            <h4 class="mb-0">🗺️ Сроки доставки по городам</h4>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Город</th>
-                            <th>Курьерская доставка</th>
-                            <th>Самовывоз</th>
-                            <th>Почта России</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Москва</strong></td>
-                            <td><span class="badge bg-success">1-2 дня</span></td>
-                            <td><span class="badge bg-success">Сегодня</span></td>
-                            <td><span class="badge bg-secondary">2-3 дня</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Санкт-Петербург</strong></td>
-                            <td><span class="badge bg-primary">2-3 дня</span></td>
-                            <td><span class="badge bg-secondary">Недоступно</span></td>
-                            <td><span class="badge bg-secondary">3-4 дня</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Другие города</strong></td>
-                            <td><span class="badge bg-warning">3-5 дней</span></td>
-                            <td><span class="badge bg-secondary">Недоступно</span></td>
-                            <td><span class="badge bg-warning">5-7 дней</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Кнопки действий -->
-    <div class="text-center">
-        <div class="d-flex flex-wrap justify-content-center gap-3">
-            <a href="{{ url_for('catalog') }}" class="btn btn-primary btn-lg">
-                <i class="fas fa-shopping-cart me-2"></i> Перейти в каталог
-            </a>
-            <a href="{{ url_for('faq') }}" class="btn btn-outline-primary btn-lg">
-                <i class="fas fa-question-circle me-2"></i> Частые вопросы
-            </a>
-            <a href="{{ url_for('sales') }}" class="btn btn-success btn-lg">
-                <i class="fas fa-fire me-2"></i> Смотреть акции
-            </a>
-        </div>
-    </div>
-</div>
 
-<!-- Модальные окна для способов доставки -->
-{% for option in delivery_options %}
-<div class="modal fade" id="deliveryModal{{ loop.index }}" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">{{ option.icon }} {{ option.name }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <h4 class="text-primary">
-                        {% if option.price == 0 %}
-                        Бесплатно
-                        {% else %}
-                        {{ option.price }} ₽
-                        {% endif %}
-                    </h4>
-                    <p class="text-muted mb-0">Срок: {{ option.time }}</p>
+    <!-- Товары в акции -->
+    <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
+        {% if products %}
+            {% for p in products %}
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm product-card transition-all">
+                    <div class="position-relative">
+                        <img src="{{ url_for('static', filename='uploads/' + p.image) }}" 
+                             class="card-img-top" alt="{{ p.name }}" 
+                             style="height: 220px; object-fit: cover;">
+                        <span class="position-absolute top-0 end-0 m-2 badge bg-danger">АКЦИЯ</span>
+                    </div>
+                    
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title fw-bold text-dark">{{ p.name }}</h5>
+                        <p class="card-text text-muted small flex-grow-1">
+                            {{ p.description[:90] }}{% if p.description|length > 90 %}...{% endif %}
+                        </p>
+                        
+                        <!-- Цена со скидкой -->
+                        <div class="mt-auto">
+                            <div class="d-flex align-items-baseline mb-1">
+                                <span class="text-muted text-decoration-line-through fs-5 me-2">
+                                    {{ "{:,.0f}".format(p.old_price) }} ₽
+                                </span>
+                                <span class="badge bg-success">−{{ ((p.old_price - p.price) / p.old_price * 100)|round(0) }}%</span>
+                            </div>
+                            <h4 class="text-danger fw-bold mb-3">{{ "{:,.0f}".format(p.price) }} ₽</h4>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('add_to_cart', product_id=p.id) }}" 
+                               class="btn btn-warning fw-bold shadow-sm">
+                                <i class="bi bi-cart-plus me-2"></i>В корзину
+                            </a>
+                            <a href="{{ url_for('product_detail', id=p.id) }}" 
+                               class="btn btn-outline-dark btn-sm">
+                                Подробнее
+                            </a>
+                        </div>
+                    </div>
                 </div>
-                
-                <h6>Описание:</h6>
-                <p class="mb-3">
-                    {% if option.name == 'Курьерская доставка' %}
-                    Курьер доставит заказ по указанному адресу в удобное для вас время.
-                    {% elif option.name == 'Самовывоз' %}
-                    Заберите заказ самостоятельно из нашего магазина в Москве.
-                    {% elif option.name == 'Почта России' %}
-                    Отправление через Почту России с наложенным платежом.
-                    {% else %}
-                    Экспресс-доставка через службу СДЭК.
-                    {% endif %}
-                </p>
-                
-                <h6>Условия:</h6>
-                <ul class="mb-0">
-                    <li>Работаем с 9:00 до 21:00</li>
-                    <li>Предварительный звонок за 1 час</li>
-                    <li>Оплата при получении</li>
-                    {% if option.free_threshold > 0 %}
-                    <li>Бесплатно при заказе от {{ option.free_threshold }} ₽</li>
-                    {% endif %}
-                </ul>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                <a href="{{ url_for('catalog') }}" class="btn btn-primary">
-                    <i class="fas fa-shopping-cart me-2"></i> Сделать заказ
+            {% endfor %}
+        {% else %}
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-tags text-muted" style="font-size: 4rem;"></i>
+                <h3 class="mt-4 text-muted">Пока нет активных акций</h3>
+                <p class="text-muted">Как только администратор добавит товар в скидки — он сразу появится здесь.</p>
+                <a href="{{ url_for('catalog') }}" class="btn btn-warning btn-lg mt-3">
+                    Перейти в каталог
                 </a>
             </div>
-        </div>
+        {% endif %}
+    </div>
+
+    <!-- Кнопки внизу -->
+    <div class="text-center mt-5">
+        <a href="{{ url_for('catalog') }}" class="btn btn-primary btn-lg">
+            <i class="fas fa-shopping-cart me-2"></i> Смотреть весь каталог
+        </a>
     </div>
 </div>
-{% endfor %}
 
 <style>
-    .card:hover {
-        transform: translateY(-5px);
-        transition: transform 0.2s;
+    .product-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     }
-    
-    .breadcrumb {
-        background-color: transparent;
-        padding-left: 0;
-    }
-    
-    .table th {
-        background-color: #f8f9fa;
-        border-top: none;
+    .product-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.12) !important;
     }
 </style>
-
-<script>
-    // Инициализация модальных окон
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        modal.addEventListener('show.bs.modal', function () {
-            this.classList.add('animate__animated', 'animate__fadeIn');
-        });
-    });
-    
-    // Анимация появления карточек
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
-            }
-        });
-    }, { threshold: 0.1 });
-    
-    document.querySelectorAll('.col-md-6, .col-lg-8, .col-lg-4').forEach(col => {
-        col.style.opacity = '0';
-        col.style.transform = 'translateY(20px)';
-        col.style.transition = 'opacity 0.5s, transform 0.5s';
-        observer.observe(col);
-    });
-</script>
-
-<!-- Animate.css для анимаций -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 {% endblock %}
