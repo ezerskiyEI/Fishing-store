@@ -170,6 +170,33 @@ def get_products_for_rag(query: str):
 set_db_products_function(get_products_for_rag)
 
 # ====================== УТИЛИТЫ ======================
+def get_products_for_rag(query: str):
+    """Функция для поиска товаров в БД по запросу (для RAG)"""
+    try:
+        # Поиск по названию и описанию
+        search_term = f"%{query}%"
+        products = Product.query.filter(
+            (Product.name.ilike(search_term)) | 
+            (Product.description.ilike(search_term)) |
+            (Product.category.ilike(search_term))
+        ).all()
+        
+        return [
+            {
+                'name': p.name,
+                'category': p.category,
+                'price': p.price,
+                'description': p.description or ''
+            }
+            for p in products
+        ]
+    except Exception as e:
+        print(f"Ошибка поиска товаров: {e}")
+        return []
+
+# Регистрируем функцию в RAG-модуле
+set_db_products_function(get_products_for_rag)
+
 def send_telegram_notification(chat_id, message):
     if not chat_id:
         return
