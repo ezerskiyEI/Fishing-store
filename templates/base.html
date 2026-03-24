@@ -98,6 +98,51 @@
     </div>
 </footer>
 
+<!-- 🤖 Плавающая кнопка ассистента -->
+<button class="btn btn-warning btn-lg rounded-circle shadow-lg position-fixed" 
+        style="bottom: 30px; right: 30px; z-index: 1000; width: 70px; height: 70px;"
+        data-bs-toggle="modal" data-bs-target="#assistantModal" title="Помощник-рыболов">
+    <i class="bi bi-robot fs-3"></i>
+</button>
+
+<!-- 🤖 Модальное окно чата с ассистентом -->
+<div class="modal fade" id="assistantModal" tabindex="-1" aria-labelledby="assistantModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title fw-bold" id="assistantModalLabel">
+                    <i class="bi bi-robot me-2"></i>Помощник-рыболов 🎣
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0" style="height: 500px; display: flex; flex-direction: column;">
+                <!-- Область чата -->
+                <div id="chatMessages" class="flex-grow-1 p-3 overflow-auto" style="background: #f8f9fa;">
+                    <div class="text-center text-muted small mb-3">
+                        <i class="bi bi-info-circle me-1"></i>Задайте вопрос о товарах для рыбалки
+                    </div>
+                </div>
+                <!-- Область ввода -->
+                <div class="p-3 border-top bg-white">
+                    <div class="input-group">
+                        <input type="text" id="chatInput" class="form-control rounded-pill" 
+                               placeholder="Спросите о снастях, приманках..." 
+                               onkeypress="if(event.key==='Enter') send_message()">
+                        <button class="btn btn-warning rounded-pill px-4" onclick="send_message()">
+                            <i class="bi bi-send-fill"></i>
+                        </button>
+                    </div>
+                    <div class="text-center mt-2">
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="clear_chat()">
+                            <i class="bi bi-trash me-1"></i>Очистить чат
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <!-- Скрипт для скрытия/показа навбара при скролле -->
@@ -105,24 +150,145 @@
     (function() {
         const navbar = document.getElementById('mainNavbar');
         let lastScrollTop = 0;
-        const scrollThreshold = 10; // минимальное смещение для срабатывания
+        const scrollThreshold = 10;
 
         window.addEventListener('scroll', function() {
             const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
 
-            // Определяем направление скролла
             if (Math.abs(currentScroll - lastScrollTop) > scrollThreshold) {
                 if (currentScroll > lastScrollTop && currentScroll > 50) {
-                    // Скролл вниз и не у самого верха → скрыть
                     navbar.classList.add('navbar-hidden');
                 } else {
-                    // Скролл вверх → показать
                     navbar.classList.remove('navbar-hidden');
                 }
                 lastScrollTop = currentScroll;
             }
         });
     })();
+</script>
+
+<!-- 🤖 Скрипт чата с ассистентом -->
+<script>
+    // Генерируем уникальный ID сессии
+    const SESSION_ID = 'session_' + Math.random().toString(36).substr(2, 9);
+    let isLoading = false;
+
+    // Функция добавления сообщения в чат
+    function add_message(text, is_user = false) {
+        const chatMessages = document.getElementById('chatMessages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `mb-3 d-flex ${is_user ? 'justify-content-end' : 'justify-content-start'}`;
+        
+        const bubble = document.createElement('div');
+        bubble.className = `p-3 rounded-3 shadow-sm ${is_user ? 'bg-warning text-dark' : 'bg-white text-dark'}`;
+        bubble.style.maxWidth = '75%';
+        bubble.style.wordWrap = 'break-word';
+        
+        // Преобразуем переносы строк в <br>
+        bubble.innerHTML = text.replace(/\n/g, '<br>');
+        
+        messageDiv.appendChild(bubble);
+        chatMessages.appendChild(messageDiv);
+        
+        // Прокрутка вниз
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Функция отображения индикатора загрузки
+    function show_typing() {
+        const chatMessages = document.getElementById('chatMessages');
+        const typingDiv = document.createElement('div');
+        typingDiv.id = 'typingIndicator';
+        typingDiv.className = 'mb-3 d-flex justify-content-start';
+        typingDiv.innerHTML = `
+            <div class="bg-white p-3 rounded-3 shadow-sm">
+                <div class="spinner-border spinner-border-sm text-warning" role="status">
+                    <span class="visually-hidden">Загрузка...</span>
+                </div>
+            </div>
+        `;
+        chatMessages.appendChild(typingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function hide_typing() {
+        const typing = document.getElementById('typingIndicator');
+        if (typing) typing.remove();
+    }
+
+    // Отправка сообщения
+    async function send_message() {
+        const input = document.getElementById('chatInput');
+        const message = input.value.trim();
+        
+        if (!message || isLoading) return;
+        
+        // Добавляем сообщение пользователя
+        add_message(message, true);
+        input.value = '';
+        isLoading = true;
+        
+        show_typing();
+        
+        try {
+            const response = await fetch('/api/assistant', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: message,
+                    session_id: SESSION_ID
+                })
+            });
+            
+            hide_typing();
+            
+            if (response.ok) {
+                const data = await response.json();
+                add_message(data.response, false);
+            } else {
+                add_message('⚠️ Ошибка обработки запроса. Попробуйте позже.', false);
+            }
+        } catch (error) {
+            hide_typing();
+            console.error('Ошибка:', error);
+            add_message('⚠️ Ошибка соединения. Проверьте подключение.', false);
+        }
+        
+        isLoading = false;
+        input.focus();
+    }
+
+    // Очистка чата
+    async function clear_chat() {
+        if (!confirm('Очистить историю чата?')) return;
+        
+        try {
+            await fetch('/api/assistant/clear', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ session_id: SESSION_ID })
+            });
+        } catch (error) {
+            console.error('Ошибка очистки:', error);
+        }
+        
+        // Очищаем отображение
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.innerHTML = `
+            <div class="text-center text-muted small mb-3">
+                <i class="bi bi-info-circle me-1"></i>Задайте вопрос о товарах для рыбалки
+            </div>
+        `;
+    }
+
+    // Автофокус при открытии модального окна
+    document.getElementById('assistantModal').addEventListener('shown.bs.modal', function() {
+        document.getElementById('chatInput').focus();
+    });
 </script>
 </body>
 </html>

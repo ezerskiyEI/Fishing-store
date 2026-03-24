@@ -6,13 +6,15 @@ import random
 import datetime
 import requests
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_mail import Mail, Message
 from sqlalchemy import text
+from RAG import rag_query, set_db_products_function
+from sqlalchemy.orm import Session
 
 
 cloudinary.config(
@@ -119,6 +121,33 @@ with app.app_context():
         print("Миграция уже была или ошибка:", e)
 
 # ====================== УТИЛИТЫ ======================
+def get_products_for_rag(query: str):
+    """Функция для поиска товаров в БД по запросу (для RAG)"""
+    try:
+        # Поиск по названию и описанию
+        search_term = f"%{query}%"
+        products = Product.query.filter(
+            (Product.name.ilike(search_term)) | 
+            (Product.description.ilike(search_term)) |
+            (Product.category.ilike(search_term))
+        ).all()
+        
+        return [
+            {
+                'name': p.name,
+                'category': p.category,
+                'price': p.price,
+                'description': p.description or ''
+            }
+            for p in products
+        ]
+    except Exception as e:
+        print(f"Ошибка поиска товаров: {e}")
+        return []
+
+# Регистрируем функцию в RAG-модуле
+set_db_products_function(get_products_for_rag)
+
 def send_telegram_notification(chat_id, message):
     if not chat_id:
         return
@@ -487,6 +516,51 @@ def admin_order_delete(id):
 @app.route('/help')
 def help():
     return render_template('help.html')
+
+
+# ====================== RAG-АССИСТЕНТ API ======================
+# Хранилище истории чатов (в памяти, для сессий)
+chat_histories = {}
+
+@app.route('/api/assistant', methods=['POST'])
+def assistant_chat():
+    """API для чата с RAG-ассистентом"""
+    data = request.get_json()
+    user_message = data.get('message', '')
+    session_id = data.get('session_id', 'default')
+    
+    if not user_message:
+        return jsonify({'error': 'Пустое сообщение'}), 400
+    
+    # Получаем или создаем историю для сессии
+    if session_id not in chat_histories:
+        chat_histories[session_id] = []
+    
+    history = chat_histories[session_id]
+    
+    try:
+        response = rag_query(user_message, history)
+        
+        # Добавляем в историю
+        history.append({"role": "user", "content": user_message})
+        history.append({"role": "assistant", "content": response})
+        
+        # Ограничиваем историю последними 10 сообщениями
+        if len(history) > 10:
+            chat_histories[session_id] = history[-10:]
+        
+        return jsonify({'response': response})
+    except Exception as e:
+        print(f"Ошибка RAG-ассистента: {e}")
+        return jsonify({'error': 'Ошибка обработки запроса'}), 500
+
+@app.route('/api/assistant/clear', methods=['POST'])
+def assistant_clear():
+    """Очистка истории чата"""
+    session_id = request.get_json().get('session_id', 'default')
+    if session_id in chat_histories:
+        chat_histories[session_id] = []
+    return jsonify({'success': True})
 
 
 # ====================== TELEGRAM БОТ (ЛОКАЛЬНЫЙ РЕЖИМ) ======================

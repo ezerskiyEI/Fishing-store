@@ -1,13 +1,18 @@
-python -m venv venv
-venv\Scripts\activate
-pip install flask
-pip install flask-sqlalchemy
-pip install flask-login
-pip install psycopg2-binary
-pip install werkzeug
-pip install flask-mail
+Flask==3.0.3
+Flask-SQLAlchemy==3.1.1
+Flask-Login==0.6.3
+psycopg2-binary==2.9.9
+Werkzeug==3.0.3
+Flask-Mail==0.10.0
+# Vector DB & ML
+chromadb== 1.3.5
+transformers==4.44.2
+torch==2.4.1
+sentence-transformers==3.1.1
 
-CREATE DATABASE fishing_shop; (перед запуском)
+# Utils
+python-dotenv==1.0.1
+PyPDF2==3.0.1
 
-
-pip install -r requirements.txt
+# Google AI
+google-generativeai==0.8.3
