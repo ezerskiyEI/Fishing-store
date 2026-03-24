@@ -31,6 +31,16 @@ cloudinary.config(
 ssl._create_default_https_context = ssl._create_unverified_context
 
 
+cloudinary.config(
+    cloud_name="YOUR_CLOUD_NAME",
+    api_key="YOUR_API_KEY",
+    api_secret="YOUR_API_SECRET"
+)
+
+
+ssl._create_default_https_context = ssl._create_unverified_context
+
+
 app = Flask(__name__)
 
 # --- КОНФИГУРАЦИЯ ---
