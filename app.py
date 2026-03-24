@@ -1,18 +1,24 @@
 import os
+import ssl
+import re
 import cloudinary
 import threading
 import telebot
 import random
-import datetime
 import requests
+import feedparser
+from bs4 import BeautifulSoup
+from datetime import datetime, timedelta # Важно: импортируем только так
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_mail import Mail, Message
 from sqlalchemy import text
+from sqlalchemy.orm import Session
+from RAG import rag_query, set_db_products_function
 
 
 cloudinary.config(
@@ -20,6 +26,9 @@ cloudinary.config(
     api_key="YOUR_API_KEY",
     api_secret="YOUR_API_SECRET"
 )
+
+
+ssl._create_default_https_context = ssl._create_unverified_context
 
 
 app = Flask(__name__)
@@ -66,6 +75,7 @@ class Product(db.Model):
     category = db.Column(db.String(50))
     description = db.Column(db.Text)
     image = db.Column(db.String(255), default='no_image.png')
+    old_price = db.Column(db.Float, nullable=True)   # ← НОВАЯ КОЛОНКА
 
 class Cart(db.Model):
     __tablename__ = 'cart'
@@ -78,7 +88,8 @@ class Order(db.Model):
     __tablename__ = 'orders'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    # ИСПРАВЛЕНО: просто datetime.utcnow без повтора слова datetime
+    created_at = db.Column(db.DateTime, default=datetime.utcnow) 
     total_price = db.Column(db.Float)
     delivery_address = db.Column(db.String(255))
     status = db.Column(db.String(50), default='В обработке')
@@ -102,6 +113,8 @@ with app.app_context():
     db.create_all()
     try:
         # Добавление колонок в orders
+        db.session.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS old_price FLOAT;"))
+        db.session.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;"))
         db.session.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;"))
         db.session.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_address VARCHAR(255);"))
         db.session.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS notification_method VARCHAR(20);"))
@@ -117,6 +130,34 @@ with app.app_context():
         print("✅ Все недостающие колонки добавлены!")
     except Exception as e:
         print("Миграция уже была или ошибка:", e)
+
+# ====================== RAG ИНТЕГРАЦИЯ ======================
+def get_products_for_rag(query: str):
+    """Функция для поиска товаров в БД по запросу (для RAG)"""
+    try:
+        # Поиск по названию и описанию
+        search_term = f"%{query}%"
+        products = Product.query.filter(
+            (Product.name.ilike(search_term)) |
+            (Product.description.ilike(search_term)) |
+            (Product.category.ilike(search_term))
+        ).all()
+
+        return [
+            {
+                'name': p.name,
+                'category': p.category,
+                'price': p.price,
+                'description': p.description or ''
+            }
+            for p in products
+        ]
+    except Exception as e:
+        print(f"Ошибка поиска товаров: {e}")
+        return []
+
+# Регистрируем функцию в RAG-модуле
+set_db_products_function(get_products_for_rag)
 
 # ====================== УТИЛИТЫ ======================
 def send_telegram_notification(chat_id, message):
@@ -158,13 +199,198 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
+
+def get_moon_phase(date):
+    """Расчет фазы луны для рыболовного календаря"""
+    lunar_days = 29.53058770576
+    new_moon = datetime(1970, 1, 7, 20, 35, 0)
+    phase = ((date - new_moon).total_seconds() / 86400) % lunar_days
+    
+    if phase < 1.84 or phase > 27.69: 
+        return "🌑 Новолуние", "dark", "Слабый"
+    elif phase < 5.53: 
+        return "🌒 Растущая", "success", "Отличный"
+    elif phase < 12.91: 
+        return "🌓 Первая четверть", "warning", "Средний"
+    elif phase < 16.61: 
+        return "🌕 Полнолуние", "danger", "Слабый"
+    elif phase < 20.30: 
+        return "🌗 Убывающая", "success", "Отличный"
+    else: 
+        return "🌘 Последняя четверть", "warning", "Средний"
+
+def generate_calendar(start_date, days=6):
+    """Генерация данных для календаря на несколько дней вперед"""
+    calendar = []
+    for i in range(days):
+        current_date = start_date + timedelta(days=i)
+        phase_name, color, rating = get_moon_phase(current_date)
+        calendar.append({
+            "date": current_date.strftime("%d.%m"),
+            "phase": phase_name,
+            "color": color,
+            "rating": rating
+        })
+    return calendar
+
+def get_fresh_news():
+    news_list = []
+    
+    # Притворяемся обычным браузером, чтобы нас не заблокировали
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7'
+    }
+
+    # ==========================================
+    # 1. Парсинг Onliner (HTML)
+    # ==========================================
+    try:
+        onliner_url = "https://people.onliner.by/tag/rybalka"
+        resp_o = requests.get(onliner_url, headers=headers, timeout=8)
+        
+        if resp_o.status_code == 200:
+            soup = BeautifulSoup(resp_o.text, 'html.parser')
+            
+            # Onliner обычно хранит новости в таких блоках
+            articles = soup.find_all('div', class_=re.compile(r'news-tidings__item|news-header__item|news-text'))
+            
+            count = 0
+            for article in articles:
+                if count >= 2: break # Берём 2 последние новости отсюда
+                
+                link_tag = article.find('a')
+                if not link_tag: continue
+                
+                link = link_tag.get('href', '')
+                if link.startswith('/'):
+                    link = "https://people.onliner.by" + link
+                
+                title_tag = article.find(class_=re.compile(r'title|subtitle'))
+                title = title_tag.get_text(strip=True) if title_tag else "Новость Onliner"
+                
+                # Ищем картинку (Onliner часто прячет её в background-image)
+                img_url = 'https://images.unsplash.com/photo-1544551763-47a0159f9234?w=800' # Дефолт
+                
+                # Поиск обычного тега <img>
+                img_tag = article.find('img')
+                if img_tag and img_tag.get('src'):
+                    img_url = img_tag.get('src')
+                else:
+                    # Поиск картинки в стилях div-а
+                    bg_div = article.find(style=re.compile(r'background-image'))
+                    if bg_div:
+                        match = re.search(r'url\([\'"]?(.*?)[\'"]?\)', bg_div['style'])
+                        if match: 
+                            img_url = match.group(1)
+
+                summary_tag = article.find(class_=re.compile(r'speech|text|description'))
+                summary = summary_tag.get_text(strip=True) if summary_tag else "Читайте подробности на сайте..."
+
+                news_list.append({
+                    "title": title,
+                    "summary": summary[:110] + "...",
+                    "link": link,
+                    "image": img_url,
+                    "timestamp": datetime.now().timestamp() + 10 # Искусственно поднимаем выше в сортировке
+                })
+                count += 1
+    except Exception as e:
+        print(f"⚠️ Ошибка парсинга Onliner: {e}")
+
+    # ==========================================
+    # 2. Парсинг Google News (RSS)
+    # ==========================================
+    try:
+        # Важно: мы добавляем /rss/ перед /topics/, чтобы получить чистые данные, а не тяжелый скриптовый сайт
+        google_url = "https://news.google.com/rss/topics/CAAqIggKIhxDQkFTRHdvSkwyMHZNREZuYkRVd0VnSnlkU2dBUAE?hl=ru&gl=RU&ceid=RU:ru"
+        resp_g = requests.get(google_url, headers=headers, timeout=8)
+        
+        if resp_g.status_code == 200:
+            feed = feedparser.parse(resp_g.content)
+            
+            for entry in feed.entries[:2]: # Берём 2 новости отсюда
+                content = entry.get('summary', '') + entry.get('description', '')
+                
+                # Дефолтная картинка, если Google не отдаст фото
+                img_url = 'https://images.unsplash.com/photo-1506477331477-33d5d8b3dc85?w=800'
+                
+                # Достаем тег <img> из описания RSS-ленты
+                img_match = re.search(r'<img [^>]*src=["\']([^"\']+)["\']', content)
+                if img_match:
+                    img_url = img_match.group(1)
+
+                clean_text = re.sub('<[^<]+?>', '', content).strip()
+                clean_text = " ".join(clean_text.split()) # Убираем лишние пробелы
+
+                news_list.append({
+                    "title": entry.title,
+                    "summary": clean_text[:110] + "...",
+                    "link": entry.link,
+                    "image": img_url,
+                    "timestamp": time.mktime(entry.published_parsed) if 'published_parsed' in entry else datetime.now().timestamp()
+                })
+    except Exception as e:
+        print(f"⚠️ Ошибка парсинга Google News: {e}")
+
+    # Сортируем собранные новости (сначала самые свежие)
+    news_list.sort(key=lambda x: x.get('timestamp', 0), reverse=True)
+
+    # Возвращаем максимум 3 новости для красивого отображения в шаблоне
+    return news_list[:3] if news_list else get_mock_news()
+
+def get_mock_news():
+    """Запасные новости на случай ошибки сервера"""
+    return [
+        {
+            "title": "Секреты весеннего клёва 2026",
+            "summary": "Разбираемся, на что лучше ловить щуку в этом сезоне...",
+            "link": "#",
+            "image": "https://images.unsplash.com/photo-1544551763-47a0159f9234?w=400"
+        },
+        {
+            "title": "Обзор новинок Shimano",
+            "summary": "Новые катушки серии Stella поступили на тестирование...",
+            "link": "#",
+            "image": "https://images.unsplash.com/photo-1506477331477-33d5d8b3dc85?w=400"
+        }
+    ]
+
 # ====================== МАРШРУТЫ ======================
+
 @app.route('/')
 def index():
-    return render_template('index.html')
+    # Работа с датой для календаря
+    date_str = request.args.get('date')
+    try:
+        selected_date = datetime.strptime(date_str, '%Y-%m-%d') if date_str else datetime.now()
+    except:
+        selected_date = datetime.now()
+
+    # Сбор данных
+    calendar_data = generate_calendar(selected_date)
+    news_data = get_fresh_news()
+
+    return render_template(
+        'index.html', 
+        calendar=calendar_data, 
+        news=news_data, 
+        selected_date=selected_date.strftime('%Y-%m-%d')
+    )
+
 
 @app.route('/promotions')
-def promotions(): return render_template('promotions.html')
+def promotions():
+    # Показываем только товары со скидкой
+    discounted = Product.query.filter(
+        Product.old_price.isnot(None),
+        Product.price < Product.old_price
+    ).all()
+    
+    return render_template('promotions.html', products=discounted)
+
 @app.route('/about')
 def about(): return render_template('about.html')
 @app.route('/delivery')
@@ -381,21 +607,49 @@ def admin_panel():
         price = float(request.form.get('price'))
         category = request.form.get('category')
         desc = request.form.get('description')
+        
+        # ← НОВОЕ: старая цена
+        old_price_str = request.form.get('old_price', '').strip()
+        old_price = float(old_price_str) if old_price_str else None
+
         file = request.files.get('image')
         filename = None
         if file and file.filename:
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['PRODUCT_UPLOADS'], filename))
+
         if p_id:
             p = db.session.get(Product, int(p_id))
-            p.name = name; p.price = price; p.category = category; p.description = desc
-            if filename: p.image = filename
+            p.name = name
+            p.price = price
+            p.category = category
+            p.description = desc
+            p.old_price = old_price
+            if filename:
+                p.image = filename
         else:
-            new_p = Product(name=name, price=price, category=category, description=desc, image=filename or 'no_image.png')
+            new_p = Product(
+                name=name, price=price, category=category,
+                description=desc, image=filename or 'no_image.png',
+                old_price=old_price
+            )
             db.session.add(new_p)
         db.session.commit()
+        flash('Товар сохранён!', 'success')
         return redirect(url_for('admin_panel'))
+
     return render_template('admin.html', products=Product.query.all())
+
+@app.route('/admin/promote/<int:id>')
+@admin_required
+def admin_promote(id):
+    p = db.session.get(Product, id)
+    if p and (p.old_price is None or p.old_price <= p.price):
+        p.old_price = p.price          # фиксируем старую цену
+        db.session.commit()
+        flash(f'✅ Товар «{p.name}» добавлен в акции! Теперь снизьте цену.', 'success')
+    return redirect(url_for('admin_panel'))
+
 
 @app.route('/admin/delete/<int:id>')
 @admin_required
@@ -448,6 +702,18 @@ def admin_orders():
     orders = query.all()
     return render_template('admin_orders.html', orders=orders, filter_type=filter_type, User=User)
 
+
+@app.route('/sales')
+def sales():
+    # Показываем ТОЛЬКО товары в акции
+    discounted_products = Product.query.filter(
+        Product.old_price.isnot(None),
+        Product.old_price > Product.price
+    ).all()
+    
+    return render_template('sales.html', products=discounted_products)
+
+
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
@@ -487,6 +753,51 @@ def admin_order_delete(id):
 @app.route('/help')
 def help():
     return render_template('help.html')
+
+
+# ====================== RAG-АССИСТЕНТ API ======================
+# Хранилище истории чатов (в памяти, для сессий)
+chat_histories = {}
+
+@app.route('/api/assistant', methods=['POST'])
+def assistant_chat():
+    """API для чата с RAG-ассистентом"""
+    data = request.get_json()
+    user_message = data.get('message', '')
+    session_id = data.get('session_id', 'default')
+
+    if not user_message:
+        return jsonify({'error': 'Пустое сообщение'}), 400
+
+    # Получаем или создаем историю для сессии
+    if session_id not in chat_histories:
+        chat_histories[session_id] = []
+
+    history = chat_histories[session_id]
+
+    try:
+        response = rag_query(user_message, history)
+
+        # Добавляем в историю
+        history.append({"role": "user", "content": user_message})
+        history.append({"role": "assistant", "content": response})
+
+        # Ограничиваем историю последними 10 сообщениями
+        if len(history) > 10:
+            chat_histories[session_id] = history[-10:]
+
+        return jsonify({'response': response})
+    except Exception as e:
+        print(f"Ошибка RAG-ассистента: {e}")
+        return jsonify({'error': 'Ошибка обработки запроса'}), 500
+
+@app.route('/api/assistant/clear', methods=['POST'])
+def assistant_clear():
+    """Очистка истории чата"""
+    session_id = request.get_json().get('session_id', 'default')
+    if session_id in chat_histories:
+        chat_histories[session_id] = []
+    return jsonify({'success': True})
 
 
 # ====================== TELEGRAM БОТ (ЛОКАЛЬНЫЙ РЕЖИМ) ======================

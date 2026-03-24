@@ -31,34 +31,133 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="small fw-bold form-label">Цена (₽)</label>
-                        <input type="number" name="price" id="p_price" class="form-control" placeholder="0" required>
+                        <label class="small fw-bold form-label">Цена (₽) — новая</label>
+                        <input type="number" name="price" id="p_price" class="form-control" placeholder="0" required step="0.01">
                     </div>
 
                     <div class="mb-3">
+                        <label class="small fw-bold form-label">Старая цена (для акции, ₽)</label>
+                        <input type="number" name="old_price" id="p_old_price" class="form-control" placeholder="Оставьте пустым, если без акции" step="0.01">
+                        <small class="form-text text-muted">Если заполнить — товар попадёт в акции</small>
+                    </div>
+
+                    <!-- ПОЛНЫЙ СПИСОК ВСЕХ КАТЕГОРИЙ -->
+                    <div class="mb-3">
                         <label class="small fw-bold form-label">Категория</label>
                         <select name="category" id="p_cat" class="form-select" required>
-                            <optgroup label="Катушки">
-                                <option value="Катушки безинерционные">Катушки безинерционные</option>
-                                <option value="Катушки зимние">Катушки зимние</option>
-                                <option value="Катушки мультипликаторные">Катушки мультипликаторные</option>
-                            </optgroup>
-                            <optgroup label="Удилища">
-                                <option value="Спиннинговые удилища">Спиннинговые удилища</option>
-                                <option value="Фидерные удилища">Фидерные удилища</option>
-                                <option value="Удочки зимние">Удочки зимние</option>
-                            </optgroup>
-                            <optgroup label="Приманки">
+                            <optgroup label="Зимняя рыбалка">
+                                <option value="Аксессуары зимние">Аксессуары зимние</option>
+                                <option value="Палатки и Выды">Палатки и Выды</option>
                                 <option value="Балансиры">Балансиры</option>
                                 <option value="Блесны зимние">Блесны зимние</option>
-                                <option value="Мормышки">Мормышки</option>
-                            </optgroup>
-                            <optgroup label="Аксессуары">
-                                <option value="Аксессуары зимние">Аксессуары зимние</option>
+                                <option value="Удочки зимние">Удочки зимние</option>
+                                <option value="Катушки зимние">Катушки зимние</option>
+                                <option value="Лески зимние">Лески зимние</option>
+                                <option value="Санки, коробы, ящики">Санки, коробы, ящики</option>
+                                <option value="Платки зимние">Платки зимние</option>
                                 <option value="Ледобуры">Ледобуры</option>
-                                <option value="Палатки и Выды">Палатки и Виды</option>
+                                <option value="Мормышки">Мормышки</option>
+                                <option value="Сторожки, кивки">Сторожки, кивки</option>
+                                <option value="Поплавки зимние">Поплавки зимние</option>
+                                <option value="Скрипты">Скрипты</option>
                             </optgroup>
-                            <option value="Другое">Другое</option>
+
+                            <optgroup label="Летняя рыбалка — Катушки">
+                                <option value="Катушки безинерционные">Катушки безинерционные</option>
+                                <option value="Катушки безинерционные с байтранером">Катушки безинерционные с байтранером</option>
+                                <option value="Катушки мультипликаторные">Катушки мультипликаторные</option>
+                                <option value="Катушки инерционные">Катушки инерционные</option>
+                                <option value="Запасные шпули">Запасные шпули</option>
+                            </optgroup>
+
+                            <optgroup label="Летняя рыбалка — Удилища">
+                                <option value="Спиннинговые удилища">Спиннинговые удилища</option>
+                                <option value="Фидерные удилища">Фидерные удилища</option>
+                                <option value="Маховые удилища">Маховые удилища</option>
+                                <option value="Болонские удилища">Болонские удилища</option>
+                                <option value="Матчевые удилища">Матчевые удилища</option>
+                                <option value="Карповые удилища">Карповые удилища</option>
+                                <option value="Нахлыстовые удилища">Нахлыстовые удилища</option>
+                            </optgroup>
+
+                            <optgroup label="Летняя рыбалка — Приманки">
+                                <option value="Блесны">Блесны</option>
+                                <option value="Воблеры">Воблеры</option>
+                                <option value="Мягкие приманки">Мягкие приманки</option>
+                                <option value="Поролоновые приманки">Поролоновые приманки</option>
+                            </optgroup>
+
+                            <optgroup label="Летняя рыбалка — Леска и оснастка">
+                                <option value="Монофильная леска">Монофильная леска</option>
+                                <option value="Плетеная леска">Плетеная леска</option>
+                                <option value="Поводочный материал">Поводочный материал</option>
+                                <option value="Флюорокарбоновая леска">Флюорокарбоновая леска</option>
+                                <option value="Лидкор">Лидкор</option>
+                                <option value="Фидергам">Фидергам</option>
+                                <option value="Готовые монтажи">Готовые монтажи</option>
+                                <option value="Кивки, наборы">Кивки, наборы</option>
+                                <option value="Стопоры">Стопоры</option>
+                                <option value="Конусы">Конусы</option>
+                                <option value="Отводчики">Отводчики</option>
+                                <option value="Термоусадка">Термоусадка</option>
+                                <option value="Сигнализаторы поклевки">Сигнализаторы поклевки</option>
+                                <option value="Литепраймерия">Литепраймерия</option>
+                                <option value="Резиновые бусы">Резиновые бусы</option>
+                                <option value="Отбойники">Отбойники</option>
+                                <option value="Вертикали и застежки">Вертикали и застежки</option>
+                                <option value="Стойки для бойлов">Стойки для бойлов</option>
+                                <option value="Грузи">Грузи</option>
+                                <option value="Кембрик">Кембрик</option>
+                                <option value="Кормушки для фидерной ловли">Кормушки для фидерной ловли</option>
+                                <option value="Поводки">Поводки</option>
+                            </optgroup>
+
+                            <optgroup label="Летняя рыбалка — Крючки">
+                                <option value="Одиночные">Одиночные</option>
+                                <option value="Офсетные">Офсетные</option>
+                                <option value="Двойники">Двойники</option>
+                                <option value="Тройники">Тройники</option>
+                            </optgroup>
+
+                            <optgroup label="Летняя рыбалка — Прикормки и добавки">
+                                <option value="Прикормки">Прикормки</option>
+                                <option value="Добавки">Добавки</option>
+                                <option value="Бойлы">Бойлы</option>
+                                <option value="Насадки и наживки">Насадки и наживки</option>
+                                <option value="Насадочные бойлы и Pop-Up">Насадочные бойлы и Pop-Up</option>
+                                <option value="Ус ароматика">Ус ароматика</option>
+                                <option value="Жидкая ароматика">Жидкая ароматика</option>
+                                <option value="Спреи">Спреи</option>
+                                <option value="Пеллетс">Пеллетс</option>
+                            </optgroup>
+
+                            <optgroup label="Летняя рыбалка — Сумки, коробки, аксессуары">
+                                <option value="Подобные удилищ">Подобные удилищ</option>
+                                <option value="Коробки">Коробки</option>
+                                <option value="Сумки">Сумки</option>
+                                <option value="Емкости">Емкости</option>
+                                <option value="Тубусы">Тубусы</option>
+                                <option value="Чехлы">Чехлы</option>
+                                <option value="Рюкзаки">Рюкзаки</option>
+                                <option value="Ящики">Ящики</option>
+                                <option value="Ручки для подсачеков">Ручки для подсачеков</option>
+                                <option value="Голова подсачека">Голова подсачека</option>
+                                <option value="Подсачеки">Подсачеки</option>
+                                <option value="Подвесники">Подвесники</option>
+                                <option value="Садки">Садки</option>
+                                <option value="Держатели удилищ">Держатели удилищ</option>
+                                <option value="Подставки, стулья">Подставки, стулья</option>
+                                <option value="Инструменты">Инструменты</option>
+                                <option value="Мотовила">Мотовила</option>
+                                <option value="Очки поляризационные">Очки поляризационные</option>
+                                <option value="Безопасность карпа">Безопасность карпа</option>
+                                <option value="Быт на рыбалке">Быт на рыбалке</option>
+                                <option value="Кобры, рогатки">Кобры, рогатки</option>
+                                <option value="Обвес для платформ и кресел">Обвес для платформ и кресел</option>
+                                <option value="Сито для прикормки">Сито для прикормки</option>
+                                <option value="ПВА">ПВА</option>
+                                <option value="Другое">Другое</option>
+                            </optgroup>
                         </select>
                     </div>
 
@@ -105,7 +204,15 @@
                                          width="60" class="rounded" alt="{{ p.name }}">
                                 </td>
                                 <td><strong>{{ p.name }}</strong></td>
-                                <td class="text-danger fw-bold">{{ p.price|round(0) }} ₽</td>
+                                <td>
+                                    {% if p.old_price and p.old_price > p.price %}
+                                        <span class="text-decoration-line-through text-muted">{{ p.old_price|round(0) }} ₽</span><br>
+                                        <span class="text-danger fw-bold">{{ p.price|round(0) }} ₽</span>
+                                        <span class="badge bg-success ms-2">АКЦИЯ</span>
+                                    {% else %}
+                                        <span class="text-danger fw-bold">{{ p.price|round(0) }} ₽</span>
+                                    {% endif %}
+                                </td>
                                 <td>{{ p.category }}</td>
                                 <td>
                                     <button onclick="editP(this)" 
@@ -113,10 +220,22 @@
                                             data-id="{{ p.id }}"
                                             data-name="{{ p.name }}"
                                             data-price="{{ p.price }}"
+                                            data-old-price="{{ p.old_price if p.old_price else '' }}"
                                             data-cat="{{ p.category }}"
                                             data-desc="{{ p.description }}">
                                         ⚙️ Редактировать
                                     </button>
+
+                                    {% if not p.old_price or p.old_price <= p.price %}
+                                    <a href="{{ url_for('admin_promote', id=p.id) }}" 
+                                       class="btn btn-sm btn-outline-success me-2"
+                                       onclick="return confirm('Добавить в акции?')">
+                                        🎉 В акции
+                                    </a>
+                                    {% else %}
+                                    <span class="badge bg-success">В акции</span>
+                                    {% endif %}
+
                                     <a href="{{ url_for('admin_delete', id=p.id) }}" 
                                        class="btn btn-sm btn-outline-danger"
                                        onclick="return confirm('Удалить товар?')">
@@ -138,7 +257,8 @@ function editP(btn) {
     document.getElementById('p_id').value = btn.dataset.id;
     document.getElementById('p_name').value = btn.dataset.name;
     document.getElementById('p_price').value = btn.dataset.price;
-    document.getElementById('p_cat').value = btn.dataset.cat;
+    document.getElementById('p_old_price').value = btn.dataset.oldPrice || '';
+    document.getElementById('p_cat').value = btn.dataset.cat;   // теперь точно сработает
     document.getElementById('p_desc').value = btn.dataset.desc;
 
     document.getElementById('formTitle').textContent = "⚙️ Редактирование товара";
