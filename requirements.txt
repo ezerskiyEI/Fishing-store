@@ -4,6 +4,11 @@ Flask-Login==0.6.3
 psycopg2-binary==2.9.9
 Werkzeug==3.0.3
 Flask-Mail==0.10.0
+feedparser==6.0.12
+cloudinary==1.44.1
+bs4==0.0.2
+telebot==0.0.5
+SQLAlchemy==2.0.48
 # Vector DB & ML
 chromadb== 1.3.5
 transformers==4.44.2
