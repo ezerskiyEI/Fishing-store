@@ -30,13 +30,13 @@
                         <div class="mt-auto">
                             <div class="d-flex align-items-baseline mb-2">
                                 <span class="text-muted text-decoration-line-through me-2 fs-5">
-                                    {{ "{:,.0f}".format(p.old_price) }} ₽
+                                    {{ "{:,.0f}".format(p.old_price) }} Byn
                                 </span>
                                 <span class="badge bg-success">
                                     −{{ ((p.old_price - p.price) / p.old_price * 100)|round(0) }}%
                                 </span>
                             </div>
-                            <h4 class="text-danger fw-bold mb-3">{{ "{:,.0f}".format(p.price) }} ₽</h4>
+                            <h4 class="text-danger fw-bold mb-3">{{ "{:,.0f}".format(p.price) }} Byn</h4>
                         </div>
 
                         <div class="d-grid gap-2">
@@ -63,7 +63,7 @@
         {% endif %}
     </div>
 
-    <!-- Кнопка внизу -->
+    <!-- Кнопка внизу  -->
     <div class="text-center mt-5">
         <a href="{{ url_for('catalog') }}" class="btn btn-primary btn-lg">
             <i class="fas fa-shopping-cart me-2"></i> Смотреть весь каталог

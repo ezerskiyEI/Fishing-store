@@ -15,8 +15,8 @@
                     <div class="flex-grow-1">
                         <h5 class="mb-1">{{ item.product.name }}</h5>
                         <p class="mb-1 text-muted">
-                            {{ item.quantity }} × {{ item.product.price|round(0) }} ₽ = 
-                            <strong>{{ item.subtotal|round(0) }} ₽</strong>
+                            {{ item.quantity }} × {{ item.product.price|round(0) }} Byn = 
+                            <strong>{{ item.subtotal|round(0) }} Byn</strong>
                         </p>
                     </div>
                     <div class="text-end">
@@ -35,7 +35,7 @@
     </div>
 
     <div class="text-end my-4">
-        <h4>Итого: <strong class="text-danger fs-3">{{ total|round(0) }} ₽</strong></h4>
+        <h4>Итого: <strong class="text-danger fs-3">{{ total|round(0) }} Byn</strong></h4>
     </div>
 
     <div class="d-flex justify-content-end">

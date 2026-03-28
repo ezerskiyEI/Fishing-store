@@ -8,8 +8,11 @@ import random
 import requests
 import feedparser
 from bs4 import BeautifulSoup
-from datetime import datetime, timedelta # Важно: импортируем только так
+from datetime import datetime, timedelta 
 from functools import wraps
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -20,35 +23,47 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 from RAG import rag_query, set_db_products_function
 
-
-cloudinary.config(
-    cloud_name="YOUR_CLOUD_NAME",
-    api_key="YOUR_API_KEY",
-    api_secret="YOUR_API_SECRET"
-)
-
-
 ssl._create_default_https_context = ssl._create_unverified_context
 
-
-cloudinary.config(
-    cloud_name="YOUR_CLOUD_NAME",
-    api_key="YOUR_API_KEY",
-    api_secret="YOUR_API_SECRET"
-)
-
-
 ssl._create_default_https_context = ssl._create_unverified_context
-
 
 app = Flask(__name__)
+
+
+# ====================== КОНФИГУРАЦИЯ БАЗЫ ДАННЫХ ======================
+DATABASE_URL = os.getenv('DATABASE_URL') or \
+    'postgresql://postgres:MtSgofBGovxMowXdvOyRuebJAAXZHShm@maglev.proxy.rlwy.net:18633/railway'
+
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Самые важные настройки для решения ошибки "SSL SYSCALL error: EOF detected"
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "pool_pre_ping": True,           # Проверяет соединение перед использованием
+    "pool_recycle": 300,             # Пересоздаёт соединения каждые 5 минут
+    "pool_size": 10,
+    "max_overflow": 20,
+    "connect_args": {
+        "keepalives": 1,
+        "keepalives_idle": 30,
+        "keepalives_interval": 10,
+        "keepalives_count": 5,
+    }
+}
+
+# Создаём db ТОЛЬКО ОДИН РАЗ
+db = SQLAlchemy(app)
+
 
 # --- КОНФИГУРАЦИЯ ---
 app.config['SECRET_KEY'] = 'fishing_ultra_mega_key_2026'
 app.config['UPLOAD_FOLDER'] = 'static/avatars'
 app.config['PRODUCT_UPLOADS'] = 'static/uploads'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:MtSgofBGovxMowXdvOyRuebJAAXZHShm@maglev.proxy.rlwy.net:18633/railway'
+# == app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:MtSgofBGovxMowXdvOyRuebJAAXZHShm@maglev.proxy.rlwy.net:18633/railway' ==
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+
+
 
 app.config.update(dict(
     MAIL_SERVER='smtp.gmail.com',
@@ -61,7 +76,6 @@ app.config.update(dict(
 
 TELEGRAM_BOT_TOKEN = '8478250303:AAGO88C82UCxrZ8dJjJEDogbL6hKjPy4Izs'
 
-db = SQLAlchemy(app)
 mail = Mail(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
@@ -120,26 +134,27 @@ def load_user(user_id):
 
 # ====================== МИГРАЦИИ ======================
 with app.app_context():
-    db.create_all()
-    try:
-        # Добавление колонок в orders
-        db.session.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS old_price FLOAT;"))
-        db.session.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;"))
-        db.session.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;"))
-        db.session.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_address VARCHAR(255);"))
-        db.session.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS notification_method VARCHAR(20);"))
-        db.session.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS tg_contact VARCHAR(100);"))
+    if not app.config.get('TESTING'):
+        db.create_all()
+        try:
+                # Добавление колонок в orders
+                db.session.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS old_price FLOAT;"))
+                db.session.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;"))
+                db.session.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;"))
+                db.session.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_address VARCHAR(255);"))
+                db.session.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS notification_method VARCHAR(20);"))
+                db.session.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS tg_contact VARCHAR(100);"))
         
-        # Добавление колонки в users
-        db.session.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS tg_id VARCHAR(50);"))
+                # Добавление колонки в users
+                db.session.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS tg_id VARCHAR(50);"))
         
-        # Добавление колонки price в order_items
-        db.session.execute(text("ALTER TABLE order_items ADD COLUMN IF NOT EXISTS price FLOAT;"))
+                # Добавление колонки price в order_items
+                db.session.execute(text("ALTER TABLE order_items ADD COLUMN IF NOT EXISTS price FLOAT;"))
         
-        db.session.commit()
-        print("✅ Все недостающие колонки добавлены!")
-    except Exception as e:
-        print("Миграция уже была или ошибка:", e)
+                db.session.commit()
+                print("✅ Все недостающие колонки добавлены!")
+        except Exception as e:
+                print("Миграция уже была или ошибка:", e)
 
 # ====================== RAG ИНТЕГРАЦИЯ ======================
 def get_products_for_rag(query: str):

@@ -1,7 +1,7 @@
 <!-- templates/help.html -->
 {% extends "base.html" %}
 
-{% block title %}Помощь - Fishing Shop{% endblock %}
+{% block title %}Помощь -  Рыболовный магазин "Золотая рыбка"{% endblock %}
 
 {% block body %}
 <div class="container py-4">
@@ -19,7 +19,7 @@
                     <i class="bi bi-telephone fs-1 text-warning mb-3"></i>
                     <h5 class="card-title">Телефоны</h5>
                     <p class="card-text mb-1">
-                        <a href="tel:+375291234567" class="text-decoration-none text-dark" title="Позвонить +375 (29) 123-45-67">+375 (29) 123-45-67</a>
+                        <a href="tel:+375331234567" class="text-decoration-none text-dark" title="Позвонить +375 (33) 123-45-67">+375 (33) 123-45-67</a>
                     </p>
                     <p class="card-text">
                         <a href="tel:+375337654321" class="text-decoration-none text-dark" title="Позвонить +375 (33) 765-43-21">+375 (33) 765-43-21</a>
@@ -57,132 +57,19 @@
     <div class="text-center mb-5">
         <h5 class="mb-3">Мы в соцсетях</h5>
         <div class="d-flex justify-content-center gap-3">
-            <!-- Ссылка на Telegram канал по заданию -->
             <a href="https://t.me/fishing_store_Fishka" class="btn btn-outline-dark rounded-circle p-3" style="width: 50px; height: 50px;" target="_blank" title="Telegram канал"><i class="bi bi-telegram"></i></a>
-            <a href="https://wa.me/375291234567" class="btn btn-outline-dark rounded-circle p-3" style="width: 50px; height: 50px;" target="_blank" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
-            <a href="https://instagram.com/fishingshop.by" class="btn btn-outline-dark rounded-circle p-3" style="width: 50px; height: 50px;" target="_blank" title="Instagram"><i class="bi bi-instagram"></i></a>
-            <a href="https://vk.com/fishingshop" class="btn btn-outline-dark rounded-circle p-3" style="width: 50px; height: 50px;" target="_blank" title="VK"><i class="bi bi-vk"></i></a>
+            <a href="https://wa.me/375331234567" class="btn btn-outline-dark rounded-circle p-3" style="width: 50px; height: 50px;" target="_blank" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+            <a href="https://www.instagram.com/fishing_shop_gold_fish/?hl=ru" class="btn btn-outline-dark rounded-circle p-3" style="width: 50px; height: 50px;" target="_blank" title="Instagram"><i class="bi bi-instagram"></i></a>
             <a href="mailto:info@fishingshop.by" class="btn btn-outline-dark rounded-circle p-3" style="width: 50px; height: 50px;" title="Написать письмо"><i class="bi bi-envelope"></i></a>
         </div>
     </div>
 
-    <!-- Наша команда -->
+    <!-- Наша команда — ПЕРЕДЕЛАННЫЙ БЛОК -->
     <h2 class="text-center mb-4">Наша команда</h2>
-    <div class="row g-4">
-        <!-- Сотрудник 2 -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card h-100 border-0 shadow-sm text-center">
-                <img src="{{ url_for('static', filename='Arsen.png') }}" class="card-img-top rounded-circle mx-auto mt-4" style="width: 120px; height: 120px; object-fit: cover;" alt="Фото">
-                <div class="card-body">
-                    <h5 class="card-title">Юрченко Арсений Алексеевич</h5>
-                    <p class="text-warning fw-bold">Основатель Сети рыболовных магазинов ""</p>
-                    <p class="card-text small">Специалист по спиннинговой ловле. Участник и победитель соревнований.</p>
-                    <div class="d-flex justify-content-center gap-3 mt-3">
-                        <a href="tel:+375332223344" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" title="Позвонить +375 (33) 222-33-44"><i class="bi bi-telephone"></i></a>
-                        <a href="mailto:a.petrova@fishingshop.by" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" title="Написать Анне"><i class="bi bi-envelope"></i></a>
-                    </div>
-                </div>
-            </div>
-        </div>
-       <!-- Сотрудник 1: директор -->
-<div class="col-md-6 col-lg-4">
-    <div class="card h-100 border-0 shadow-sm text-center">
-        <img src="{{ url_for('static', filename='MEnt.jpg') }}" class="card-img-top rounded-circle mx-auto mt-4" style="width: 120px; height: 120px; object-fit: cover;" alt="Фото директора">
-        <div class="card-body">
-            <h5 class="card-title">Езерский Егор Игоревич</h5>
-            <p class="text-warning fw-bold">Директор</p>
-            <p class="card-text small">Основатель магазина по адресу Машерова 4, опыт рыбалки более 20 лет. Поможет с выбором любого товара.</p>
-            <div class="d-flex justify-content-center gap-3 mt-3">
-                <button type="button" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" 
-                        title="+375 (29) 111-22-33"
-                        data-bs-toggle="modal" 
-                        data-bs-target="#phoneModal"
-                        data-employee-name="Езерский Егор Игоревич"
-                        data-phone="+375333179042"
-                        data-phone-formatted="+375 (33) 317-90-42">
-                    <i class="bi bi-telephone"></i>
-                </button>
-                <a href="mailto:director@fishingshop.by" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" title="Написать директору"><i class="bi bi-envelope"></i></a>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- Сотрудник 2 -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card h-100 border-0 shadow-sm text-center">
-                <img src="{{ url_for('static', filename='Ded_photo.jpg') }}" class="card-img-top rounded-circle mx-auto mt-4" style="width: 120px; height: 120px; object-fit: cover;" alt="Фото">
-                <div class="card-body">
-                    <h5 class="card-title">Хвасько Виктор Сергеевич</h5>
-                    <p class="text-warning fw-bold"> Директор</p>
-                    <p class="card-text small">Основатель магазина по адресу Леонида Беды, 4, корпус 1, ком. 418А. Специалист по спиннинговой ловле. Участница соревнований.</p>
-                    <div class="d-flex justify-content-center gap-3 mt-3">
-                        <a href="tel:+375332223344" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" title="Позвонить +375 (33) 222-33-44"><i class="bi bi-telephone"></i></a>
-                        <a href="mailto:a.petrova@fishingshop.by" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" title="Написать Анне"><i class="bi bi-envelope"></i></a>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <p class="text-center text-muted mb-5">Руководители и ключевые сотрудники — всегда на связи</p>
     
-        <!-- Сотрудник 3 -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card h-100 border-0 shadow-sm text-center">
-                <img src="https://randomuser.me/api/portraits/men/2.jpg" class="card-img-top rounded-circle mx-auto mt-4" style="width: 120px; height: 120px; object-fit: cover;" alt="Фото">
-                <div class="card-body">
-                    <h5 class="card-title">Сидоров Алексей Петрович</h5>
-                    <p class="text-warning fw-bold">Технический специалист</p>
-                    <p class="card-text small">Мастер по ремонту снастей. Консультации по технике.</p>
-                    <div class="d-flex justify-content-center gap-3 mt-3">
-                        <a href="tel:+375293334455" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" title="Позвонить +375 (29) 333-44-55"><i class="bi bi-telephone"></i></a>
-                        <a href="mailto:tech@fishingshop.by" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" title="Написать Алексею"><i class="bi bi-envelope"></i></a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Сотрудник 4 -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card h-100 border-0 shadow-sm text-center">
-                <img src="https://randomuser.me/api/portraits/women/2.jpg" class="card-img-top rounded-circle mx-auto mt-4" style="width: 120px; height: 120px; object-fit: cover;" alt="Фото">
-                <div class="card-body">
-                    <h5 class="card-title">Козлова Елена Дмитриевна</h5>
-                    <p class="text-warning fw-bold">Менеджер по работе с клиентами</p>
-                    <p class="card-text small">Оформление заказов, доставка и оплата.</p>
-                    <div class="d-flex justify-content-center gap-3 mt-3">
-                        <a href="tel:+375334445566" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" title="Позвонить +375 (33) 444-55-66"><i class="bi bi-telephone"></i></a>
-                        <a href="mailto:manager@fishingshop.by" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" title="Написать Елене"><i class="bi bi-envelope"></i></a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Сотрудник 5 -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card h-100 border-0 shadow-sm text-center">
-                <img src="https://randomuser.me/api/portraits/men/3.jpg" class="card-img-top rounded-circle mx-auto mt-4" style="width: 120px; height: 120px; object-fit: cover;" alt="Фото">
-                <div class="card-body">
-                    <h5 class="card-title">Морозов Дмитрий Александрович</h5>
-                    <p class="text-warning fw-bold">Эксперт по фидерной ловле</p>
-                    <p class="card-text small">Проводит мастер-классы и семинары.</p>
-                    <div class="d-flex justify-content-center gap-3 mt-3">
-                        <a href="tel:+375295556677" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" title="Позвонить +375 (29) 555-66-77"><i class="bi bi-telephone"></i></a>
-                        <a href="mailto:expert@fishingshop.by" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" title="Написать Дмитрию"><i class="bi bi-envelope"></i></a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Сотрудник 6 -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card h-100 border-0 shadow-sm text-center">
-                <img src="https://randomuser.me/api/portraits/women/3.jpg" class="card-img-top rounded-circle mx-auto mt-4" style="width: 120px; height: 120px; object-fit: cover;" alt="Фото">
-                <div class="card-body">
-                    <h5 class="card-title">Соколова Мария Игоревна</h5>
-                    <p class="text-warning fw-bold">Администратор сайта</p>
-                    <p class="card-text small">Помощь в онлайн-заказах, техподдержка.</p>
-                    <div class="d-flex justify-content-center gap-3 mt-3">
-                        <a href="tel:+375336667788" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" title="Позвонить +375 (33) 666-77-88"><i class="bi bi-telephone"></i></a>
-                        <a href="mailto:web@fishingshop.by" class="btn btn-outline-dark rounded-circle p-2" style="width: 40px; height: 40px;" title="Написать Марии"><i class="bi bi-envelope"></i></a>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="row g-4" id="team-container">
+        <!-- Карточки генерируются JavaScript (полностью сохранён стиль Bootstrap) -->
     </div>
 
     <!-- Часто задаваемые вопросы (аккордеон) -->
@@ -250,11 +137,9 @@
         </div>
     </div>
 
-    <!-- Адреса и карта (взято из доставки) -->
+    <!-- Адреса и карта (без изменений) -->
     <div class="mt-5">
         <h2 class="text-center mb-4">Наши адреса</h2>
-
-        <!-- Блок с адресами -->
         <div class="row g-4 mb-4">
             <div class="col-md-6">
                 <div class="card shadow border-0 h-100">
@@ -279,13 +164,32 @@
                 </div>
             </div>
         </div>
-
-        <!-- Яндекс.Карта -->
         <div id="map" style="height: 520px; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.15);"></div>
     </div>
 </div>
 
-<!-- Яндекс.Карты и скрипт для двух меток -->
+<!-- МОДАЛЬНОЕ ОКНО ДЛЯ ТЕЛЕФОНА И TELEGRAM (новое, полностью функциональное) -->
+<div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 shadow">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-semibold" id="modalTitle">Контакт</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center px-4" id="modalBody">
+                <!-- Заполняется JavaScript -->
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Закрыть</button>
+                <button type="button" id="modalActionBtn" class="btn btn-primary px-4">
+                    <!-- Заполняется JavaScript -->
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Яндекс.Карты и скрипт (без изменений) -->
 <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU"></script>
 <script>
     ymaps.ready(function () {
@@ -295,26 +199,159 @@
             controls: ['zoomControl', 'fullscreenControl', 'routeButtonControl']
         });
 
-        // Первый адрес: Леонида Беды, 4 к1, 418А
         var placemark1 = new ymaps.Placemark([53.930152, 27.588951], {
             balloonContentHeader: "Леонида Беды, 4 к1, 418А",
             balloonContentBody: "<br>Пн–Пт 10:00–19:00, Сб 10:00–15:00"
-        }, {
-            preset: 'islands#redDotIcon'
-        });
+        }, { preset: 'islands#redDotIcon' });
 
-        // Второй адрес: Машерова, 4, ком. 43
         var placemark2 = new ymaps.Placemark([53.911725, 27.576761], {
             balloonContentHeader: "Машерова, 4, ком. 43",
             balloonContentBody: "<br>Пн–Пт 10:00–19:00, Сб 10:00–15:00"
-        }, {
-            preset: 'islands#redDotIcon'
-        });
+        }, { preset: 'islands#redDotIcon' });
 
         myMap.geoObjects.add(placemark1);
         myMap.geoObjects.add(placemark2);
-
         myMap.setBounds(myMap.geoObjects.getBounds(), { checkZoomRange: true });
     });
+</script>
+
+<!-- СКРИПТ ДЛЯ КАРТОЧЕК КОМАНДЫ И МОДАЛЬНОГО ОКНА -->
+<script>
+    // Данные руководителей и персонала (актуальные номера из вашего запроса)
+    const staffMembers = [
+        {
+            id: 1,
+            name: "Юрченко Арсений Алексеевич",
+            position: "Основатель сети магазинов",
+            description: "Специалист по спиннинговой ловле. Участник и победитель соревнований.",
+            phone: "+375(44)5449775",
+            tgLink: "https://t.me/arseniy_yurchenko",   // ← ЗАМЕНИТЕ НА РЕАЛЬНУЮ ССЫЛКУ
+            photo: "{{ url_for('static', filename='Arsen.png') }}"
+        },
+        {
+            id: 2,
+            name: "Езерский Егор Игоревич",
+            position: "Директор",
+            description: "Основатель магазина по адресу Машерова 4, опыт рыбалки более 20 лет.",
+            phone: "+375(33)3179042",
+            tgLink: "https://t.me/e_ezerskiy",       // ← ЗАМЕНИТЕ НА РЕАЛЬНУЮ ССЫЛКУ
+            photo: "{{ url_for('static', filename='MEnt.jpg') }}"
+        },
+        {
+            id: 3,
+            name: "Хвасько Виктор Сергеевич",
+            position: "Директор",
+            description: "Основатель магазина по адресу Леонида Беды, 4, корпус 1, ком. 418А. Специалист по спиннинговой ловле.",
+            phone: "+375(33)3507888",
+            tgLink: "https://t.me/viktor_khvasko",     // ← ЗАМЕНИТЕ НА РЕАЛЬНУЮ ССЫЛКУ
+            photo: "{{ url_for('static', filename='Ded_photo.jpg') }}"
+        }
+    ]
+
+    // Генерация карточек (полностью в стиле страницы)
+    function renderTeamCards() {
+        const container = document.getElementById('team-container')
+        container.innerHTML = ''
+
+        staffMembers.forEach(member => {
+            const cardHTML = `
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm text-center">
+                    <img src="${member.photo}" 
+                         class="card-img-top rounded-circle mx-auto mt-4" 
+                         style="width: 120px; height: 120px; object-fit: cover;" 
+                         alt="${member.name}">
+                    <div class="card-body">
+                        <h5 class="card-title">${member.name}</h5>
+                        <p class="text-warning fw-bold">${member.position}</p>
+                        <p class="card-text small">${member.description}</p>
+                        
+                        <div class="d-flex justify-content-center gap-3 mt-4">
+                            <!-- Кнопка Телефон -->
+                            <button type="button" 
+                                    onclick="openContactModal(${member.id}, 'phone')"
+                                    class="btn btn-outline-dark rounded-circle p-2" 
+                                    style="width: 48px; height: 48px;" 
+                                    title="Позвонить">
+                                <i class="bi bi-telephone fs-4"></i>
+                            </button>
+                            
+                            <!-- Кнопка Telegram -->
+                            <button type="button" 
+                                    onclick="openContactModal(${member.id}, 'telegram')"
+                                    class="btn btn-outline-dark rounded-circle p-2" 
+                                    style="width: 48px; height: 48px;" 
+                                    title="Написать в Telegram">
+                                <i class="bi bi-telegram fs-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>`
+            
+            container.innerHTML += cardHTML
+        })
+    }
+
+    // Открытие модального окна
+    function openContactModal(memberId, type) {
+        const member = staffMembers.find(m => m.id === memberId)
+        if (!member) return
+
+        const modalEl = document.getElementById('contactModal')
+        const modal = new bootstrap.Modal(modalEl)
+        
+        const titleEl = document.getElementById('modalTitle')
+        const bodyEl = document.getElementById('modalBody')
+        const actionBtn = document.getElementById('modalActionBtn')
+
+        if (type === 'phone') {
+            titleEl.textContent = 'Номер телефона'
+            bodyEl.innerHTML = `
+                <div class="py-3">
+                    <i class="bi bi-telephone fs-1 text-success mb-3"></i>
+                    <h3 class="fw-semibold mb-2">${member.phone}</h3>
+                    <p class="text-muted">Нажмите кнопку ниже, чтобы позвонить</p>
+                </div>`
+            actionBtn.innerHTML = `<i class="bi bi-telephone me-2"></i>Позвонить`
+            actionBtn.onclick = () => {
+                const cleanPhone = member.phone.replace(/[\s()]/g, '')
+                window.location.href = `tel:${cleanPhone}`
+                modal.hide()
+            }
+        } 
+        else if (type === 'telegram') {
+            titleEl.textContent = 'Telegram'
+            bodyEl.innerHTML = `
+                <div class="py-3">
+                    <i class="bi bi-telegram fs-1 text-primary mb-3"></i>
+                    <p class="mb-3">Открыть чат с <strong>${member.name.split(' ')[0]}</strong> в Telegram</p>
+                </div>`
+            actionBtn.innerHTML = `<i class="bi bi-telegram me-2"></i>Открыть чат`
+            actionBtn.onclick = () => {
+                window.open(member.tgLink, '_blank')
+                modal.hide()
+            }
+        }
+
+        modal.show()
+    }
+
+    // Инициализация при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function () {
+        renderTeamCards()
+        
+        // Поддержка Escape
+        document.addEventListener('keydown', function (e) {
+            if (e.key === "Escape") {
+                const modalEl = document.getElementById('contactModal')
+                if (modalEl && modalEl.classList.contains('show')) {
+                    bootstrap.Modal.getInstance(modalEl).hide()
+                }
+            }
+        })
+        
+        console.log('%c✅ Карточки руководителей и персонала успешно переделаны с модальными окнами (телефон + Telegram)', 'color: #0d6efd; font-weight: 600')
+    })
 </script>
 {% endblock %}

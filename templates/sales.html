@@ -33,11 +33,11 @@
                         <div class="mt-auto">
                             <div class="d-flex align-items-baseline mb-1">
                                 <span class="text-muted text-decoration-line-through fs-5 me-2">
-                                    {{ "{:,.0f}".format(p.old_price) }} ₽
+                                    {{ "{:,.0f}".format(p.old_price) }} Byn
                                 </span>
                                 <span class="badge bg-success">−{{ ((p.old_price - p.price) / p.old_price * 100)|round(0) }}%</span>
                             </div>
-                            <h4 class="text-danger fw-bold mb-3">{{ "{:,.0f}".format(p.price) }} ₽</h4>
+                            <h4 class="text-danger fw-bold mb-3">{{ "{:,.0f}".format(p.price) }} Byn</h4>
                         </div>
 
                         <div class="d-grid gap-2">

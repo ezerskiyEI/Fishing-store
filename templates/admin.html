@@ -31,12 +31,12 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="small fw-bold form-label">Цена (₽) — новая</label>
+                        <label class="small fw-bold form-label">Цена (Byn) — новая</label>
                         <input type="number" name="price" id="p_price" class="form-control" placeholder="0" required step="0.01">
                     </div>
 
                     <div class="mb-3">
-                        <label class="small fw-bold form-label">Старая цена (для акции, ₽)</label>
+                        <label class="small fw-bold form-label">Старая цена (для акции, Byn)</label>
                         <input type="number" name="old_price" id="p_old_price" class="form-control" placeholder="Оставьте пустым, если без акции" step="0.01">
                         <small class="form-text text-muted">Если заполнить — товар попадёт в акции</small>
                     </div>
@@ -206,11 +206,11 @@
                                 <td><strong>{{ p.name }}</strong></td>
                                 <td>
                                     {% if p.old_price and p.old_price > p.price %}
-                                        <span class="text-decoration-line-through text-muted">{{ p.old_price|round(0) }} ₽</span><br>
-                                        <span class="text-danger fw-bold">{{ p.price|round(0) }} ₽</span>
+                                        <span class="text-decoration-line-through text-muted">{{ p.old_price|round(0) }} Byn</span><br>
+                                        <span class="text-danger fw-bold">{{ p.price|round(0) }} Byn</span>
                                         <span class="badge bg-success ms-2">АКЦИЯ</span>
                                     {% else %}
-                                        <span class="text-danger fw-bold">{{ p.price|round(0) }} ₽</span>
+                                        <span class="text-danger fw-bold">{{ p.price|round(0) }} Byn</span>
                                     {% endif %}
                                 </td>
                                 <td>{{ p.category }}</td>
