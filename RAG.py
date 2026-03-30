@@ -1,23 +1,26 @@
-import chromadb
-from chromadb.config import Settings
-from transformers import AutoTokenizer, AutoModel
-import torch
 import os
 from typing import List, Dict
 from dotenv import load_dotenv
 import google.generativeai as genai
 import PyPDF2
 
+# ChromaDB и transformers - опционально (могут отсутствовать на Railway)
+try:
+    import chromadb
+    from chromadb.config import Settings
+    from transformers import AutoTokenizer, AutoModel
+    import torch
+    CHROMADB_ENABLED = True
+    print("✅ ChromaDB и transformers загружены")
+except ImportError as e:
+    print(f"⚠️ ChromaDB/transformers не загружены: {e}")
+    CHROMADB_ENABLED = False
+
 load_dotenv()
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=GOOGLE_API_KEY)
 model = genai.GenerativeModel('gemini-2.5-flash')
-
-client_chroma = chromadb.Client(Settings(anonymized_telemetry=False))
-
-tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
-embedding_model = AutoModel.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
 
 # Глобальная переменная для хранения функции получения данных из БД
 get_products_from_db = None
@@ -27,7 +30,19 @@ def set_db_products_function(func):
     global get_products_from_db
     get_products_from_db = func
 
+# Инициализация эмбеддингов только если ChromaDB доступен
+if CHROMADB_ENABLED:
+    client_chroma = chromadb.Client(Settings(anonymized_telemetry=False))
+    tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
+    embedding_model = AutoModel.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
+else:
+    client_chroma = None
+    tokenizer = None
+    embedding_model = None
+
 def get_embedding(text: str):
+    if not CHROMADB_ENABLED or tokenizer is None or embedding_model is None:
+        return None
     inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=512)
     with torch.no_grad():
         outputs = embedding_model(**inputs)
@@ -62,6 +77,9 @@ def load_document(path: str) -> str:
         return f.read()
 
 def insert_chunks(chunks: List[str], collection_name: str = "rag_chunks"):
+    if not CHROMADB_ENABLED:
+        print("⚠️ ChromaDB не доступен, пропуск индексации")
+        return False
     collection = client_chroma.get_or_create_collection(name=collection_name)
     embeddings = [get_embedding(chunk) for chunk in chunks]
     collection.add(
@@ -69,15 +87,18 @@ def insert_chunks(chunks: List[str], collection_name: str = "rag_chunks"):
         embeddings=embeddings,
         ids=[f"chunk_{i}" for i in range(len(chunks))]
     )
+    return True
 
 def search_chunks(query: str, collection_name: str = "rag_chunks", top_k: int = 5) -> List[str]:
+    if not CHROMADB_ENABLED:
+        return []
     collection = client_chroma.get_or_create_collection(name=collection_name)
     query_embedding = get_embedding(query)
     results = collection.query(
         query_embeddings=[query_embedding],
         n_results=top_k
     )
-    return results['documents'][0]
+    return results['documents'][0] if results['documents'] else []
 
 def get_products_context(query: str) -> str:
     """Получает контекст из БД товаров на основе запроса"""
@@ -102,16 +123,19 @@ def get_products_context(query: str) -> str:
         return ""
 
 def rag_query(user_query: str, history: List[Dict], collection_name: str = "rag_chunks") -> str:
-    relevant_chunks = search_chunks(user_query, collection_name)
-    db_context = get_products_context(user_query)
+    # Поиск в ChromaDB (если доступен)
+    relevant_chunks = search_chunks(user_query, collection_name) if CHROMADB_ENABLED else []
     
+    # Поиск товаров в БД
+    db_context = get_products_context(user_query)
+
     # Объединяем контексты
     contexts = []
     if db_context:
         contexts.append(f"Товары из базы данных магазина:\n{db_context}")
     if relevant_chunks:
         contexts.append(f"Информация из документов:\n" + "\n\n".join(relevant_chunks))
-    
+
     context = "\n\n".join(contexts)
 
     if context.strip():

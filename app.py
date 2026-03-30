@@ -22,7 +22,15 @@ from werkzeug.utils import secure_filename
 from flask_mail import Mail, Message
 from sqlalchemy import text
 from sqlalchemy.orm import Session
-from RAG import rag_query, set_db_products_function
+
+# RAG модуль - опционально (можно отключить для экономии памяти)
+try:
+    from RAG import rag_query, set_db_products_function
+    RAG_ENABLED = True
+    print("✅ RAG модуль загружен")
+except ImportError as e:
+    print(f"⚠️ RAG модуль не загружен: {e}")
+    RAG_ENABLED = False
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -186,8 +194,9 @@ def get_products_for_rag(query: str):
         print(f"Ошибка поиска товаров: {e}")
         return []
 
-# Регистрируем функцию в RAG-модуле
-set_db_products_function(get_products_for_rag)
+# Регистрируем функцию в RAG-модуле (если RAG включён)
+if RAG_ENABLED:
+    set_db_products_function(get_products_for_rag)
 
 # ====================== УТИЛИТЫ ======================
 def get_products_for_rag(query: str):
@@ -213,9 +222,6 @@ def get_products_for_rag(query: str):
     except Exception as e:
         print(f"Ошибка поиска товаров: {e}")
         return []
-
-# Регистрируем функцию в RAG-модуле
-set_db_products_function(get_products_for_rag)
 
 def send_telegram_notification(chat_id, message):
     if not chat_id:

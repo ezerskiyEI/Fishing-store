@@ -17,9 +17,6 @@ google-generativeai==0.8.3
 python-dotenv==1.0.1
 PyPDF2==3.0.1
 
-# Vector DB & ML
-chromadb>=0.5.0
-sentence-transformers==3.1.1
-transformers>=4.40.0
-tokenizers>=0.19.0
-torch==2.11.0
+# Vector DB & ML (только для Railway - облегчённая версия)
+# chromadb и torch слишком тяжёлые для 0.5 ГБ памяти
+# RAG будет работать только с Google Gemini (без векторной БД)
