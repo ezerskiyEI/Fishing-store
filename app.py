@@ -1107,35 +1107,53 @@ def create_admin():
         admin = User.query.filter_by(is_admin=True).first()
         if admin:
             return f"Админ уже существует: {admin.username} ({admin.email})"
-        
+
         # Создаём нового админа
         new_admin = User(
             username="admin",
-            email="beztele153@gmail.com",           # ← поменяй на свой
+            email="beztele153@gmail.com",
             password=generate_password_hash("admin123"),
             is_admin=True
         )
         db.session.add(new_admin)
         db.session.commit()
-        
-        return "✅ Админ успешно создан!<br>Логин: admin<br>Пароль: твой_сильный_пароль_2026"
+
+        return "✅ Админ успешно создан!<br>Логин: admin<br>Пароль: admin123"
     except Exception as e:
         return f"Ошибка: {str(e)}"
-    
 
+# ====================== TELEGRAM WEBHOOK ======================
+@app.route('/telegram_webhook/', methods=['POST'])
+def telegram_webhook():
+    """Обработка webhook от Telegram"""
+    update = telebot.types.Update.de_json(request.get_json(force=True))
+    bot.process_new_updates([update])
+    return '', 200
 
+# ====================== ЗАПУСК ======================
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         print("✅ База данных инициализирована")
 
-    # === Запуск Telegram-бота в отдельном потоке ===
-    def run_bot_safe():
+    # === Запуск Telegram-бота ===
+    # Определяем среду: Railway или локально
+    railway_domain = os.getenv('RAILWAY_PUBLIC_DOMAIN')
+    
+    def run_bot():
         print("🤖 Запуск Telegram-бота...")
-        try:
-            bot.remove_webhook()
-            time.sleep(1)
-            print("✅ Бот запущен в режиме polling")
+        bot.remove_webhook(drop_pending_updates=True)
+        time.sleep(1)
+        
+        if railway_domain:
+            # Режим webhook для Railway
+            webhook_url = f"https://{railway_domain}/telegram_webhook/"
+            print(f"📡 Railway обнаружен. Webhook URL: {webhook_url}")
+            print("ℹ️ Установи webhook через curl после деплоя (см. DEPLOY.md)")
+            # Не устанавливаем webhook автоматически — это сделает пользователь
+        else:
+            # Режим polling для локальной разработки
+            print("✅ Бот запущен в режиме polling (локально)")
             bot.infinity_polling(
                 none_stop=True,
                 interval=1,
@@ -1143,24 +1161,18 @@ if __name__ == '__main__':
                 long_polling_timeout=30,
                 skip_pending=True
             )
-        except Exception as e:
-            print(f"⚠️ Бот упал с ошибкой: {e}")
-            print("   Перезапуск через 5 секунд...")
-            time.sleep(5)
-            run_bot_safe()  # Рекурсивный перезапуск
 
-    bot_thread = threading.Thread(target=run_bot_safe, daemon=True)
+    bot_thread = threading.Thread(target=run_bot, daemon=True)
     bot_thread.start()
     print("🤖 Telegram-бот запущен в фоновом режиме")
 
     # === Запуск Flask ===
-    # Для локальной разработки и Railway
     port = int(os.getenv('PORT', 5000))
     host = os.getenv('HOST', '0.0.0.0')
     print(f"🚀 Запуск веб-сервера Flask на http://{host}:{port}")
     app.run(
         host=host,
         port=port,
-        debug=False,   # ← ОБЯЗАТЕЛЬНО False!
-        use_reloader=False  # Отключаем reloader для стабильности
+        debug=False,
+        use_reloader=False
     )

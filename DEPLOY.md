@@ -61,11 +61,12 @@ git push -u origin main
 
 ## 🔧 Шаг 4: Настрой Deploy
 
-Railway автоматически определит `railway.json` и `Dockerfile`.
+Railway автоматически определит `railway.json` и `Dockerfile.railway`.
 
 **Проверь настройки:**
 - **Builder**: Dockerfile
-- **Start Command**: `gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 2 --timeout 30 app:app`
+- **Dockerfile Path**: Dockerfile.railway
+- **Start Command**: `python app.py`
 
 ---
 
@@ -77,7 +78,43 @@ Railway автоматически определит `railway.json` и `Dockerf
 
 ---
 
-## 🔧 Шаг 6: Инициализация БД
+## 🔧 Шаг 6: Настрой Telegram webhook
+
+После деплоя нужно установить webhook для Telegram-бота:
+
+### Вариант A: Через curl (рекомендуется)
+
+```bash
+# Замени <your-project> на свой URL от Railway
+curl -X POST "https://api.telegram.org/bot8478250303:AAGO88C82UCxrZ8dJjJEDogbL6hKjPy4Izs/setWebhook?url=https://<your-project>.railway.app/telegram_webhook/"
+```
+
+**Ожидаемый ответ:**
+```json
+{"ok":true,"result":true,"description":"Webhook was set"}
+```
+
+### Вариант B: Через браузер
+
+Открой в браузере:
+```
+https://api.telegram.org/bot8478250303:AAGO88C82UCxrZ8dJjJEDogbL6hKjPy4Izs/setWebhook?url=https://<your-project>.railway.app/telegram_webhook/
+```
+
+### Проверка webhook
+
+```bash
+curl "https://api.telegram.org/bot8478250303:AAGO88C82UCxrZ8dJjJEDogbL6hKjPy4Izs/getWebhookInfo"
+```
+
+**Ожидаемый ответ:**
+```json
+{"ok":true,"result":{"url":"https://...railway.app/telegram_webhook/","has_custom_certificate":false,"pending_update_count":0,"last_error_date":0,"last_error_message":""}}
+```
+
+---
+
+## 🔧 Шаг 7: Инициализация БД
 
 После первого деплоя нужно создать таблицы:
 
@@ -103,7 +140,7 @@ railway run python -c "from app import app, db; app.app_context().push(); db.cre
 
 ---
 
-## 🔧 Шаг 7: Создай админа
+## 🔧 Шаг 8: Создай админа
 
 Открой в браузере:
 ```
@@ -121,36 +158,29 @@ railway run python -c "from app import app, db, generate_password_hash, User; ap
 
 ### Что уже сделано:
 
-1. **Убраны тяжёлые зависимости** из `requirements.txt`:
-   - `chromadb` (занимает ~200 МБ)
-   - `transformers`, `torch`, `sentence-transformers` (занимают ~1 ГБ)
-   
-2. **Добавлен Gunicorn** с 2 воркерами и 2 потоками (экономит память)
+1. **Облегчённый requirements.railway.txt**:
+   - Убраны `chromadb`, `torch`, `transformers` (~1.5 ГБ)
+   - RAG работает только с Google Gemini + поиск по БД
 
-3. **Оптимизирован Dockerfile**:
+2. **Оптимизирован Dockerfile.railway**:
    - `PYTHONDONTWRITEBYTECODE=1` — не создаёт `.pyc` файлы
    - `PIP_NO_CACHE_DIR=1` — не кэширует пакеты
    - `apt-get clean` — очищает кэш
 
-4. **Добавлены переменные для malloc**:
-   - `PYTHONMALLOC=malloc`
-   - `MALLOC_MMAP_THRESHOLD_=32768`
+3. **Telegram webhook вместо polling**:
+   - Не требует постоянного опроса Telegram
+   - Работает только при входящих сообщениях
 
 ### Если память всё равно заканчивается:
 
-1. **Уменьши количество воркеров Gunicorn** в `railway.json`:
-   ```json
-   "startCommand": "gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 2 --timeout 30 app:app"
-   ```
-
-2. **Отключи Telegram-бота** (если не нужен):
+1. **Отключи Telegram-бота**:
    В `app.py` закомментируй запуск бота:
    ```python
-   # bot_thread = threading.Thread(target=run_bot_safe, daemon=True)
+   # bot_thread = threading.Thread(target=run_bot, daemon=True)
    # bot_thread.start()
    ```
 
-3. **Уменьши pool_size** в `app.config['SQLALCHEMY_ENGINE_OPTIONS']`:
+2. **Уменьши pool_size** в `app.config['SQLALCHEMY_ENGINE_OPTIONS']`:
    ```python
    "pool_size": 5,  # было 10
    "max_overflow": 10  # было 20
