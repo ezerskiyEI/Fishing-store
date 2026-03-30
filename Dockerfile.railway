@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.railway.txt .
 
 # Устанавливаем Python-пакеты
-RUN pip install --no-cache-dir -r requirements.railway.txt
+RUN pip install --no-cache-dir -r requirements_railway.txt
 
 # Копируем весь проект
 COPY . .
