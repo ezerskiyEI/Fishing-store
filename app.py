@@ -6,6 +6,7 @@ import threading
 import telebot
 import random
 import requests
+import time  
 import feedparser
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta 
@@ -28,6 +29,10 @@ ssl._create_default_https_context = ssl._create_unverified_context
 ssl._create_default_https_context = ssl._create_unverified_context
 
 app = Flask(__name__)
+
+
+WEBAPP_URL = os.getenv('WEBAPP_URL') or 'http://127.0.0.1:5000'  # для локального теста
+
 
 
 # ====================== КОНФИГУРАЦИЯ БАЗЫ ДАННЫХ ======================
@@ -855,7 +860,6 @@ def assistant_clear():
 # ====================== TELEGRAM БОТ (ЛОКАЛЬНЫЙ РЕЖИМ) ======================
 bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 
-WEBAPP_URL = 'http://127.0.0.1:5000'
 
 @bot.message_handler(commands=['status'])
 def cmd_status(message):
@@ -863,19 +867,21 @@ def cmd_status(message):
     print(f"[BOT] Команда /status от {tg_id}")
     
     try:
-        # ←←← ОТКЛЮЧАЕМ ПРОКСИ ДЛЯ LOCALHOST
         r = requests.get(
             f"{WEBAPP_URL}/api/myorders/{tg_id}", 
-            timeout=10,
-            proxies={"http": None, "https": None}   # ← ЭТО ГЛАВНОЕ ИСПРАВЛЕНИЕ
+            timeout=15,
+            proxies={"http": None, "https": None}
         )
-        print(f"[BOT] Ответ сайта: статус {r.status_code}")
         
         if r.status_code == 404:
             bot.reply_to(message, 
                 f"❌ Аккаунт не привязан!\n\n"
                 f"Зайди в Профиль на сайте и укажи свой Telegram ID:\n"
                 f"`{tg_id}`", parse_mode='Markdown')
+            return
+        
+        if r.status_code != 200:
+            bot.reply_to(message, "⚠️ Ошибка сервера. Попробуйте позже.")
             return
         
         data = r.json()
@@ -901,29 +907,82 @@ def cmd_status(message):
         
         bot.reply_to(message, text, parse_mode='Markdown')
         
+    except requests.exceptions.ConnectionError:
+        bot.reply_to(message, 
+            "⚠️ Не удалось связаться с сайтом.\n"
+            "Убедись, что сайт запущен (`python app.py`).", 
+            parse_mode='Markdown')
     except Exception as e:
         print(f"[BOT] ❌ ОШИБКА: {type(e).__name__} — {e}")
-        bot.reply_to(message, "⚠️ Не удалось связаться с сайтом.\nУбедись, что сайт запущен (`python app.py`).")
+        bot.reply_to(message, "⚠️ Произошла ошибка. Попробуйте позже.", parse_mode='Markdown')
+
+
+@bot.message_handler(commands=['info'])
+def cmd_info(message):
+    try:
+        bot.reply_to(message,
+            "🛠 **Информация и контакты Fishing Shop**\n\n"
+            "**👥 Связь с руководством**\n\n"
+            "**Юрченко Арсений Алексеевич**\n"
+            "Основатель сети магазинов\n"
+            "📞 +375 (44) 544-97-75\n"
+            "💬 [Написать](https://t.me/arseniy_yurchenko)\n\n"
+            "**Езерский Егор Игоревич**\n"
+            "Директор\n"
+            "📞 +375 (33) 317-90-42\n"
+            "💬 [Написать](https://t.me/e_ezerskiy)\n\n"
+            "**Хвасько Виктор Сергеевич**\n"
+            "Директор\n"
+            "📞 +375 (33) 350-78-88\n"
+            "💬 [Написать](https://t.me/viktor_khvasko)\n\n"
+            "**Общие контакты магазина:**\n"
+            "📧 info@fishingshop.by\n"
+            "📞 +375 (33) 123-45-67\n"
+            "📞 +375 (33) 765-43-21\n\n"
+            "При смене статуса заказа бот пришлёт уведомление автоматически! 🎣",
+            parse_mode='Markdown',
+            disable_web_page_preview=True
+        )
+        print(f"[BOT] Команда /info от {message.chat.id}")
+    except Exception as e:
+        print(f"[BOT] ❌ ОШИБКА /info: {e}")
+        bot.reply_to(message, "⚠️ Ошибка при загрузке информации.")
+
 
 @bot.message_handler(commands=['help'])
 def cmd_help(message):
-    bot.reply_to(message,
-        "🛠 **Помощь по заказам**\n\n"
-        "• `/status` — показать все заказы + товары\n"
-        "• Привяжи Telegram ID в Профиле на сайте\n\n"
-        "При смене статуса заказа бот пришлёт уведомление автоматически! 🎣",
-        parse_mode='Markdown')
+    try:
+        bot.reply_to(message,
+            "🛠 **Доступные команды бота:**\n\n"
+            "• `/status` — посмотреть информацию о ваших заказах\n"
+            "• `/info` — контакты руководства и магазина\n"
+            "• `/help` — показать это справочное сообщение\n\n"
+            "Чтобы получать уведомления о заказах — привяжите свой Telegram ID в профиле на сайте.",
+            parse_mode='Markdown'
+        )
+        print(f"[BOT] Команда /help от {message.chat.id}")
+    except Exception as e:
+        print(f"[BOT] ❌ ОШИБКА /help: {e}")
+        bot.reply_to(message, "⚠️ Ошибка при загрузке справки.")
 
-# ────────────────────────────────────────────────────────────────
-# API для Telegram-бота — список заказов пользователя по tg_id
-# ────────────────────────────────────────────────────────────────
-from flask import jsonify
 
+@bot.message_handler(func=lambda message: True)
+def cmd_default(message):
+    """Обработка всех остальных сообщений"""
+    bot.reply_to(message, 
+        "👋 Привет! Используйте команды:\n"
+        "/help — список команд\n"
+        "/status — мои заказы\n"
+        "/info — контакты",
+        parse_mode='Markdown'
+    )
+
+
+# ====================== API РОУТЫ ======================
 @app.route('/api/myorders/<string:tg_id>')
 def api_my_orders(tg_id):
-    tg_id = tg_id.strip()  # на всякий случай убираем пробелы
+    tg_id = tg_id.strip()
 
-    # ищем пользователя по tg_id
     user = User.query.filter_by(tg_id=tg_id).first()
 
     if not user:
@@ -933,22 +992,19 @@ def api_my_orders(tg_id):
             "message": "Пользователь с таким Telegram ID не найден"
         }), 404
 
-    # получаем все заказы пользователя
     orders = Order.query.filter_by(user_id=user.id)\
                         .order_by(Order.created_at.desc())\
                         .all()
 
     result = []
-
     for order in orders:
-        # собираем товары заказа
         items = []
         for oi in OrderItem.query.filter_by(order_id=order.id).all():
             product = Product.query.get(oi.product_id)
             items.append({
                 "name": product.name if product else "[товар удалён]",
                 "quantity": oi.quantity,
-                "price": float(oi.price_at_purchase or 0)  # если есть поле price_at_purchase
+                "price": float(oi.price_at_purchase or 0)
             })
 
         result.append({
@@ -967,14 +1023,31 @@ def api_my_orders(tg_id):
         "username": user.username
     })
 
-# ================== ЗАПУСК БОТА С ЗАДЕРЖКОЙ ==================
-def run_bot():
-    import time
-    time.sleep(4)                    # даём Flask полностью запуститься
-    print("🤖 Бот успешно запущен и готов к работе!")
-    bot.infinity_polling(none_stop=True)
 
-threading.Thread(target=run_bot, daemon=True).start()
+# ====================== ЗАПУСК БОТА ======================
+def run_bot():
+    time.sleep(3)  # Даём Flask полностью запуститься
+    print("🤖 Telegram-бот успешно запущен и готов к работе!")
+    try:
+        bot.infinity_polling(none_stop=True, interval=1, timeout=30)
+    except Exception as e:
+        print(f"[BOT] ❌ Ошибка polling: {e}")
+
+
+# ====================== ГЛАВНЫЙ ЗАПУСК ======================
+if __name__ == '__main__':
+    # Создаём таблицы БД
+    with app.app_context():
+        db.create_all()
+        print("✅ База данных инициализирована")
+    
+    # Запускаем бота в отдельном потоке
+    bot_thread = threading.Thread(target=run_bot, daemon=True)
+    bot_thread.start()
+    
+
+
+
 
 
 # ===== Функция определения рейтинга клёва =====
@@ -1021,5 +1094,63 @@ def get_moon_calendar(lat, lon, start_date, days=30):
     return calendar
 
 
+@app.route('/create_admin')
+def create_admin():
+    try:
+        # Проверяем, есть ли уже админ
+        admin = User.query.filter_by(is_admin=True).first()
+        if admin:
+            return f"Админ уже существует: {admin.username} ({admin.email})"
+        
+        # Создаём нового админа
+        new_admin = User(
+            username="admin",
+            email="beztele153@gmail.com",           # ← поменяй на свой
+            password=generate_password_hash("admin123"),
+            is_admin=True
+        )
+        db.session.add(new_admin)
+        db.session.commit()
+        
+        return "✅ Админ успешно создан!<br>Логин: admin<br>Пароль: твой_сильный_пароль_2026"
+    except Exception as e:
+        return f"Ошибка: {str(e)}"
+    
+
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    with app.app_context():
+        db.create_all()
+        print("✅ База данных инициализирована")
+
+    # === Запуск Telegram-бота в отдельном потоке ===
+    def run_bot_safe():
+        print("🤖 Запуск Telegram-бота...")
+        bot.remove_webhook()   # на всякий случай убираем старый webhook
+        time.sleep(1)
+        
+        while True:   # автоперезапуск бота при падении
+            try:
+                print("✅ Бот запущен в режиме polling")
+                bot.infinity_polling(
+                    none_stop=True, 
+                    interval=1, 
+                    timeout=30,
+                    long_polling_timeout=30,
+                    skip_pending=True   # пропускаем старые сообщения при запуске
+                )
+            except Exception as e:
+                print(f"⚠️ Бот упал с ошибкой: {e}")
+                print("   Перезапуск бота через 5 секунд...")
+                time.sleep(5)
+
+    bot_thread = threading.Thread(target=run_bot_safe, daemon=True)
+    bot_thread.start()
+
+    # === Запуск Flask ===
+    print("🚀 Запуск веб-сервера Flask на http://127.0.0.1:5000")
+    app.run(
+        host='127.0.0.1', 
+        port=5000, 
+        debug=False   # ← ОБЯЗАТЕЛЬНО False!
+    )
