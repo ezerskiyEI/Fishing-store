@@ -56,8 +56,6 @@ git push -u origin main
 | `CLOUDINARY_API_SECRET` | Твой secret из `db.env` |
 | `SECRET_KEY` | Любая случайная строка (например `fishing_key_2026`) |
 | `WEBAPP_URL` | Оставь пустым (Railway сам подставит) |
-| `PYTHONMALLOC` | `malloc` (оптимизация памяти) |
-| `MALLOC_MMAP_THRESHOLD_` | `32768` (оптимизация памяти) |
 
 ---
 

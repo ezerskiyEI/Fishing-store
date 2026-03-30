@@ -1126,34 +1126,35 @@ if __name__ == '__main__':
     # === Запуск Telegram-бота в отдельном потоке ===
     def run_bot_safe():
         print("🤖 Запуск Telegram-бота...")
-        bot.remove_webhook()   # на всякий случай убираем старый webhook
-        time.sleep(1)
-        
-        while True:   # автоперезапуск бота при падении
-            try:
-                print("✅ Бот запущен в режиме polling")
-                bot.infinity_polling(
-                    none_stop=True, 
-                    interval=1, 
-                    timeout=30,
-                    long_polling_timeout=30,
-                    skip_pending=True   # пропускаем старые сообщения при запуске
-                )
-            except Exception as e:
-                print(f"⚠️ Бот упал с ошибкой: {e}")
-                print("   Перезапуск бота через 5 секунд...")
-                time.sleep(5)
+        try:
+            bot.remove_webhook()
+            time.sleep(1)
+            print("✅ Бот запущен в режиме polling")
+            bot.infinity_polling(
+                none_stop=True,
+                interval=1,
+                timeout=30,
+                long_polling_timeout=30,
+                skip_pending=True
+            )
+        except Exception as e:
+            print(f"⚠️ Бот упал с ошибкой: {e}")
+            print("   Перезапуск через 5 секунд...")
+            time.sleep(5)
+            run_bot_safe()  # Рекурсивный перезапуск
 
     bot_thread = threading.Thread(target=run_bot_safe, daemon=True)
     bot_thread.start()
+    print("🤖 Telegram-бот запущен в фоновом режиме")
 
     # === Запуск Flask ===
-    # Для локальной разработки
+    # Для локальной разработки и Railway
     port = int(os.getenv('PORT', 5000))
     host = os.getenv('HOST', '0.0.0.0')
     print(f"🚀 Запуск веб-сервера Flask на http://{host}:{port}")
     app.run(
         host=host,
         port=port,
-        debug=False   # ← ОБЯЗАТЕЛЬНО False!
+        debug=False,   # ← ОБЯЗАТЕЛЬНО False!
+        use_reloader=False  # Отключаем reloader для стабильности
     )

@@ -32,5 +32,5 @@ ENV FLASK_ENV=production
 # Порт (Railway задаёт PORT автоматически)
 EXPOSE 5000
 
-# Команда запуска (gunicorn для продакшена)
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "2", "--timeout", "30", "app:app"]
+# Команда запуска (используем python app.py, порт берётся из ENV)
+CMD ["python", "app.py"]
