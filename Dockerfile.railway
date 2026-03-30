@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean
 
 # Копируем зависимости для Railway (без тяжёлых ML библиотек)
-COPY requirements.railway.txt .
+COPY requirements_railway.txt .
 
 # Устанавливаем Python-пакеты
 RUN pip install --no-cache-dir -r requirements_railway.txt
