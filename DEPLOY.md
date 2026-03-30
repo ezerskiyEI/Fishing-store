@@ -86,7 +86,7 @@ Railway автоматически определит `railway.json` и `Dockerf
 
 ```bash
 # Замени <your-project> на свой URL от Railway
-curl -X POST "https://api.telegram.org/bot8478250303:AAGO88C82UCxrZ8dJjJEDogbL6hKjPy4Izs/setWebhook?url=https://<your-project>.railway.app/telegram_webhook/"
+curl -X POST "https://api.telegram.org/bot8478250303:AAGO88C82UCxrZ8dJjJEDogbL6hKjPy4Izs/setWebhook?url=https://fishing-store-production.up.railway.app/telegram_webhook/"
 ```
 
 **Ожидаемый ответ:**
@@ -98,7 +98,7 @@ curl -X POST "https://api.telegram.org/bot8478250303:AAGO88C82UCxrZ8dJjJEDogbL6h
 
 Открой в браузере:
 ```
-https://api.telegram.org/bot8478250303:AAGO88C82UCxrZ8dJjJEDogbL6hKjPy4Izs/setWebhook?url=https://<your-project>.railway.app/telegram_webhook/
+https://api.telegram.org/bot8478250303:AAGO88C82UCxrZ8dJjJEDogbL6hKjPy4Izs/setWebhook?url=https://fishing-store-production.up.railway.app/telegram_webhook/
 ```
 
 ### Проверка webhook
