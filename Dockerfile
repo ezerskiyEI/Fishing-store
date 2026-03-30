@@ -1,14 +1,20 @@
-# Базовый образ Python
+# Базовый образ Python (легковесный)
 FROM python:3.11-slim
 
 # Рабочая директория
 WORKDIR /app
 
+# Переменные окружения для оптимизации памяти
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PIP_NO_CACHE_DIR=1
+
 # Устанавливаем системные зависимости
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
 # Копируем зависимости
 COPY requirements.txt .
@@ -22,10 +28,9 @@ COPY . .
 # Переменные окружения
 ENV FLASK_APP=app.py
 ENV FLASK_ENV=production
-ENV PYTHONUNBUFFERED=1
 
-# Порт Flask
+# Порт (Railway задаёт PORT автоматически)
 EXPOSE 5000
 
-# Команда запуска
-CMD ["python", "app.py"]
+# Команда запуска (gunicorn для продакшена)
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "2", "--timeout", "30", "app:app"]

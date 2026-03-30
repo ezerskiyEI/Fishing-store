@@ -12,5 +12,10 @@ instance/
 static/avatars/*
 static/uploads/*
 *.docx
+venv/
+.venv/
 *.txt
 !requirements.txt
+.pytest_cache/
+.coverage
+htmlcov/

@@ -1148,9 +1148,12 @@ if __name__ == '__main__':
     bot_thread.start()
 
     # === Запуск Flask ===
-    print("🚀 Запуск веб-сервера Flask на http://127.0.0.1:5000")
+    # Для локальной разработки
+    port = int(os.getenv('PORT', 5000))
+    host = os.getenv('HOST', '0.0.0.0')
+    print(f"🚀 Запуск веб-сервера Flask на http://{host}:{port}")
     app.run(
-        host='127.0.0.1', 
-        port=5000, 
+        host=host,
+        port=port,
         debug=False   # ← ОБЯЗАТЕЛЬНО False!
     )
