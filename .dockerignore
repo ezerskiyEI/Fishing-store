@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+*.pyo
+*.db
+.git/
+.gitignore
+*.md
+.env
+*.env
+!db.env
+instance/
+static/avatars/*
+static/uploads/*
+*.docx
+*.txt
+!requirements.txt
